@@ -16,7 +16,9 @@
 | `code_analysis/` | 코드 정적 분석 모듈 | 코드팀 |
 | `frontend/` | 화면 (예정) | UI 담당 |
 
+
 설치와 실행 방법: [`backend/README.md`](backend/README.md)
+구조 설명, 파트별로 고칠 파일, 평가 방법: [`backend/docs/GUIDE.md`](backend/docs/GUIDE.md)
 코드 분석 모듈: [`code_analysis/README.md`](code_analysis/README.md)
 
 ## 공통 규칙
