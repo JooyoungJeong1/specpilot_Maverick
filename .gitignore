@@ -1,0 +1,38 @@
+# 비밀
+.env
+.env.*
+!.env.example
+
+# 실행 결과, 기업 자료
+output/
+inputs/
+*.pdf
+*.xlsx
+*.zip
+
+# 정답 세트와 채점 결과 (블라인드)
+answer_key*.json
+!**/answer_key.example.json
+*조장용*
+score_report.json
+score_review.md
+
+# 파이썬, 프론트, 도구
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+node_modules/
+dist/
+build/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 코드 분석 (자바 도구)
+code_analysis/out/
+target/
+.gradle/
+*.class

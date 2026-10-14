@@ -1,0 +1,10 @@
+{
+  "_설명": "정답 세트 형식 예시. 가상의 앱(QNA)이다. 실제 정답 세트는 조장만 가지고, 팀 저장소에 올리지 않는다.",
+  "_expected 값": "구현 / 불일치 / 미구현 / 부분구현 / 확인필요",
+  "items": {
+    "QNA-002 Description 1": {"expected": "불일치", "note": "제목 오류 문구가 다름 (qna.js:8)"},
+    "QNA-002 Description 2": {"expected": "구현", "note": "10자 검사 있음"},
+    "QNA-002 Action A": {"expected": "부분구현", "note": "저장·이동은 있고 완료 팝업 없음"},
+    "QNA-002 Action B": {"expected": "미구현", "note": "비공개 처리 없음"}
+  }
+}

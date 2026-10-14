@@ -1,0 +1,14 @@
+{
+  "_설명": "judge --facts 로 넘기는 코드 분석 결과 형식 예시. 가상의 앱(QNA)이다. common은 모든 화면에, screens의 목록은 그 화면 ③에만 들어간다. 항목은 문자열이든 객체든 되고 그대로 ③ 프롬프트에 들어간다. 파일 경로는 소스 폴더 기준 상대 경로, / 구분.",
+  "common": [
+    {"kind": "security", "file": "src/main/java/demo/config/SecurityConfig.java", "line": 21, "fact": "/qna/** 는 로그인한 사용자만 접근"}
+  ],
+  "screens": {
+    "QNA-002": [
+      {"kind": "route", "file": "src/main/java/demo/controller/QnaController.java", "line": 30, "fact": "POST /qna → QnaService.create 호출 후 redirect:/qna"},
+      {"kind": "call", "file": "src/main/java/demo/service/QnaService.java", "line": 18, "fact": "create → QnaRepository.save"},
+      {"kind": "template", "file": "src/main/resources/templates/qna/write.html", "line": 14, "fact": "모델 값 errorMessage를 넘기지만 템플릿에서 출력하지 않음"},
+      {"kind": "js", "file": "src/main/resources/static/js/qna.js", "line": 8, "fact": "제목 빈 값 검사는 submit 때만 실행 (blur 없음)"}
+    ]
+  }
+}

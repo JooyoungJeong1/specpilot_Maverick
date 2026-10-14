@@ -1,0 +1,53 @@
+{
+  "screens": [
+    {"screen_id": "MEM-001", "name": "로그인", "depth": "회원", "pages": [1, 2], "type": "화면", "state_pages": [2], "repeats_from": null},
+    {"screen_id": "MEM-002", "name": "회원가입", "depth": "회원", "pages": [3], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-001", "name": "문의 목록", "depth": "고객센터", "pages": [4], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-002", "name": "문의 작성", "depth": "고객센터", "pages": [5], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-003", "name": "문의 상세", "depth": "고객센터", "pages": [6], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-004", "name": "답변 작성", "depth": "고객센터", "pages": [7], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-005", "name": "문의 수정", "depth": "고객센터", "pages": [8], "type": "화면", "state_pages": [], "repeats_from": null},
+    {"screen_id": "QNA-006", "name": "문의 삭제 확인", "depth": "고객센터", "pages": [9], "type": "팝업", "state_pages": [], "repeats_from": {"screen_id": "QNA-005", "items": ["Description 0"]}}
+  ],
+  "flows": [
+    {"from": "MEM-001", "trigger": "회원가입", "to": "MEM-002", "source": "MEM-001 Action F"},
+    {"from": "QNA-001", "trigger": "문의하기", "to": "QNA-002", "source": "QNA-001 Action C"},
+    {"from": "QNA-003", "trigger": "답변하기", "to": "QNA-004", "source": "QNA-003 Action C"},
+    {"from": "QNA-003", "trigger": "수정하기", "to": "QNA-005", "source": "QNA-003 Action D"},
+    {"from": "QNA-005", "trigger": "삭제하기", "to": "QNA-006", "source": "QNA-005 Action C"}
+  ],
+  "common_areas": [
+    {"name": "상단 로그아웃", "described_in": "QNA-001", "described_scope": ["로그아웃 확인 알림창 표시", "예: 세션 종료 후 로그인 화면 이동", "아니오: 현재 화면 유지"], "appears_in": ["QNA-001", "QNA-002", "QNA-003", "QNA-004", "QNA-005"]},
+    {"name": "좌측 메뉴", "described_in": "QNA-001", "described_scope": ["선택된 메뉴 강조"], "appears_in": ["QNA-001", "QNA-002", "QNA-003", "QNA-004", "QNA-005"]}
+  ],
+  "login_required": [
+    {"screen_id": "MEM-001", "value": false, "evidence": "로그인 화면"},
+    {"screen_id": "MEM-002", "value": false, "evidence": "로그인 전에 쓰는 화면 (MEM-001 '회원가입' 링크)"},
+    {"screen_id": "QNA-001", "value": true, "evidence": "QNA-001 상단 로그아웃 버튼"},
+    {"screen_id": "QNA-002", "value": true, "evidence": "상단 로그아웃 버튼 (화면 이미지)"},
+    {"screen_id": "QNA-003", "value": true, "evidence": "상단 로그아웃 버튼 (화면 이미지)"},
+    {"screen_id": "QNA-004", "value": true, "evidence": "상단 로그아웃 버튼 (화면 이미지)"},
+    {"screen_id": "QNA-005", "value": true, "evidence": "상단 로그아웃 버튼 (화면 이미지)"},
+    {"screen_id": "QNA-006", "value": true, "evidence": "부모 화면 QNA-005를 따름"}
+  ],
+  "roles": [
+    {"name": "상담원", "origin": "명시", "evidence": "QNA-003 Description 3 '답변은 상담원만 작성한다'"},
+    {"name": "(이름 미명시)", "origin": "함의", "evidence": "QNA-001 Description 4 '문의 게시물은 목록 화면에서 삭제할 수 없다' / QNA-005 '삭제하기' 버튼"}
+  ],
+  "role_limited": [
+    {"feature": "답변 작성", "screen_id": "QNA-003", "element": "답변하기 버튼", "opens": "QNA-004", "allowed": ["상담원"], "origin": "명시", "evidence": "QNA-003 Description 3", "reason": null},
+    {"feature": "문의 삭제", "screen_id": "QNA-005", "element": "삭제하기 버튼", "opens": "QNA-006", "allowed": ["(이름 미명시)"], "origin": "함의", "evidence": "QNA-001 Description 4 '문의 게시물은 목록 화면에서 삭제할 수 없다' / QNA-005 '삭제하기' 버튼", "reason": "목록 화면에서는 삭제할 수 없다고 하면서 수정 화면에는 삭제하기 버튼이 있으므로, 삭제할 수 있는 다른 사용자가 있어야 한다"}
+  ],
+  "reading_notes": [],
+  "units": [
+    {"key": "a01", "screen_id": "APP", "source": ["MEM-001 Description 0", "QNA-001 화면 이미지"], "quote": "회원만 문의를 남길 수 있다 / 상단 로그아웃 버튼", "origin": "함의", "reason": "문의 화면은 로그인한 상태를 전제로 그려져 있고 문의는 회원만 남길 수 있으므로, 로그인하지 않으면 문의 화면을 쓸 수 없다", "kind": "접근", "given": "로그아웃 상태", "when": "문의 목록 주소로 직접 들어간다", "conditions": [], "then": "문의 목록을 볼 수 없다", "exact": {"message": null, "values": ["QNA-001", "QNA-002", "QNA-003"], "target": null}, "issue": "볼 수 없을 때 로그인 화면으로 보내는지 안내만 하는지 설계서에 없음", "ref_hint": null},
+    {"key": "a02", "screen_id": "APP", "source": ["MEM-001 Description 2", "MEM-002 Action A"], "quote": "회원가입 시 설정한 이메일(ID)와 비밀번호로 로그인한다 / 가입하기: 회원 정보를 저장하고 로그인 화면으로 이동한다", "origin": "함의", "reason": "로그인은 가입할 때 설정한 이메일과 비밀번호로 하고 가입하면 그 정보가 저장되므로, 가입한 계정으로 로그인할 수 있어야 한다", "kind": "처리", "given": "회원가입을 마친 상태", "when": "로그인 화면에서 가입 때 입력한 이메일과 비밀번호로 로그인한다", "conditions": [], "then": "로그인된다", "exact": {"message": null, "values": [], "target": null}, "issue": "로그인 성공 뒤 이동하는 화면이 설계서에 없음", "ref_hint": null},
+    {"key": "a03", "screen_id": "APP", "source": ["QNA-005 Action A", "QNA-001 Description 2"], "quote": "수정 내용을 저장하고 문의 상세(QNA-003)로 이동한다 / 목록에는 작성자 본인의 문의와 비공개가 아닌 문의가 표시된다", "origin": "함의", "reason": "수정하면 내용이 저장되고 목록은 작성자 본인의 문의를 표시하므로, 제목을 바꾸면 본인의 목록에도 바뀐 제목이 보여야 한다", "kind": "처리", "given": "문의 제목을 수정해 저장한 상태", "when": "작성자 본인 계정으로 문의 목록을 본다", "conditions": [], "then": "바뀐 제목이 목록에 표시된다", "exact": {"message": null, "values": [], "target": null}, "issue": null, "ref_hint": null}
+  ],
+  "questions": [
+    {"key": "q01", "topic": "로그인 실패 제한", "question": "로그인에 연속으로 실패하면 제한을 두나요? 둔다면 몇 회, 얼마 동안인가요?", "why": "설계서에 로그인 실패 안내 문구만 있고 제한 규칙은 없음 (MEM-001 Action E)", "priority": "하", "related_units": []},
+    {"key": "q02", "topic": "로그인 후 이동", "question": "로그인하면 어느 화면으로 가나요? 로그인 전에 열려던 화면이 있으면 그 화면으로 돌아가나요?", "why": "로그인 성공 후 이동 화면이 설계서에 없음", "priority": "하", "related_units": ["a01", "a02"]},
+    {"key": "q03", "topic": "문의 삭제 권한", "question": "문의를 삭제할 수 있는 사용자는 누구인가요? 삭제할 수 없는 사용자에게는 수정 화면의 삭제하기 버튼을 숨기나요?", "why": "QNA-001 Description 4는 목록 화면에서 삭제할 수 없다고 하고 QNA-005에는 삭제하기 버튼이 있어 서로 맞지 않음. 삭제할 수 있는 사용자의 이름이 설계서에 없음", "priority": "상", "related_units": []},
+    {"key": "q04", "topic": "좌측 메뉴 이동", "question": "좌측 메뉴를 누르면 어느 화면으로 이동하나요?", "why": "좌측 메뉴는 선택된 메뉴 강조만 설명되어 있고 이동 대상이 없음 (QNA-001 Action B)", "priority": "하", "related_units": []}
+  ]
+}
