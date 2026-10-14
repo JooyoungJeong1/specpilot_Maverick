@@ -17,16 +17,15 @@
 | `frontend/` | 화면 (예정) | UI 담당 |
 
 
-설치와 실행 방법: [`backend/README.md`](backend/README.md)
-구조 설명, 파트별로 고칠 파일, 평가 방법: [`backend/docs/GUIDE.md`](backend/docs/GUIDE.md)
-코드 분석 모듈: [`code_analysis/README.md`](code_analysis/README.md)
+- 설치와 실행 방법: [`backend/README.md`](backend/README.md)
+- 구조 설명, 파트별로 고칠 파일, 평가 방법: [`backend/docs/GUIDE.md`](backend/docs/GUIDE.md)
+- 코드 분석 모듈: [`code_analysis/README.md`](code_analysis/README.md)
 
 ## 공통 규칙
 
-1. **main에 바로 push 금지.** 브랜치를 만들어 작업하고 PR을 올린다. 조장이 확인 후 merge.
+1. **실행은 조장 PC에서만 한다.** 조원은 파일을 고쳐 PR을 올리고, 조장이 돌려서 결과와 점수를 공유한다.
+2. **main에 바로 push 금지.** 브랜치를 만들어 작업하고 PR을 올린다. 조장이 확인 후 merge.
    - 브랜치 이름: `prompt/...`, `judge/...`, `code/...`, `front/...`
-2. **올리면 안 되는 것**: `.env`(API 키), `inputs/`(기획서·샘플 코드), `output/`(실행 결과). `.gitignore`가 막아 주지만 commit 전에 `git status`로 한 번 확인.
-3. **API 키는 각자 발급**해서 `backend/.env`에 넣는다. 공유 금지.
-4. 기획서 PDF와 샘플 코드는 조장이 따로 전달 → `backend/inputs/`에 넣는다. 샘플 코드 폴더 이름을 `specpilot`으로 두지 않는다.
-5. **정답 세트는 저장소에 없다.** 실행 결과(`backend/output/<실행이름>/` 폴더)를 압축해 조장에게 보내면 점수를 돌려준다.
-6. 작업 시작 전에 `git pull`로 최신 코드를 받는다.
+3. PR 설명에는 **바꾼 것 / 이유 / 어느 화면(또는 항목)을 보고 고쳤는지**를 적는다.
+4. 작업 시작 전에 `git pull`로 최신 코드를 받는다.
+5. `.env`, `inputs/`, `output/`은 올리지 않는다(`.gitignore`가 막음).
