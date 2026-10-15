@@ -19,9 +19,15 @@ import re
 from pathlib import Path
 
 from .facts import Fact
-from .java_facts import JavaFacts, Route
-from .link import Linker, _match, _route_pattern
-from .web_facts import norm_url
+from .facts_builder import FactsBuilder, route_label, thymeleaf_url, route_pattern as _route_pattern, url_match as _match
+
+
+def norm_url(raw: str | None) -> str | None:
+    return thymeleaf_url(raw)
+
+
+def views_of(r: dict) -> list[dict]:
+    return [x for x in r["returns"] if x["kind"] in ("view", "forward")]
 
 ID_LIKE = re.compile(r"^[A-Z]+-\d+$")
 
@@ -35,9 +41,10 @@ def read_json(path: Path):
 
 
 class ScreenSplitter:
-    def __init__(self, linker: Linker, jf: JavaFacts):
-        self.lk = linker
-        self.jf = jf
+    def __init__(self, fb: FactsBuilder):
+        self.fb = fb
+        self.m = fb.m
+        self.templates = fb.m.templates          # 뷰 이름 → 템플릿(dict)
         self.matched: dict[str, list[str]] = {}       # 화면 → 고른 템플릿 경로 (기록용)
         self.anchors: dict[str, set[str]] = {}
 
@@ -48,7 +55,7 @@ class ScreenSplitter:
         profile = req.get("app_profile") or {}
         screens = [s for s in (profile.get("screens") or []) if s.get("screen_id")]
         units = req.get("units") or []
-        views = [v for v in self.lk.templates if not self._is_layout(v)]
+        views = [v for v in self.templates if not self._is_layout(v)]
         body = {v: self._body_key(v) for v in views}
         scores: dict[str, dict[str, float]] = {}
         for s in screens:
@@ -58,10 +65,10 @@ class ScreenSplitter:
             name_key = _key(re.sub(r"\(.*?\)", "", s.get("name") or ""))
             tokens = [_key(t) for t in re.sub(r"\(.*?\)", "", s.get("name") or "").split() if _key(t)]
             for v in views:
-                t = self.lk.templates[v]
+                t = self.templates[v]
                 if name_key and not popup:            # 팝업은 부모 화면 템플릿 제목과 겹치므로 이름으로 고르지 않는다
                     best = 0
-                    for h in [t.title] + t.headings:
+                    for h in [t["title"]] + t["headings"]:
                         hk = _key(h)
                         if not hk:
                             continue
@@ -94,16 +101,16 @@ class ScreenSplitter:
             chosen = self._choose(scores, min_score)
         for sid in [s["screen_id"] for s in screens]:
             vs = chosen.get(sid, [])
-            self.matched[sid] = [self.lk.templates[v].path for v in vs]
+            self.matched[sid] = [self.templates[v]["file"] for v in vs]
             self._add_templates(sid, vs)
 
     def _body_key(self, view: str) -> str:
-        t = self.lk.templates[view]
-        text = t.text
-        for url, _ in t.scripts:                      # 템플릿이 불러오는 JS의 문구도 그 화면 글자로 본다
-            jp = self.lk.js_path(url)
+        t = self.templates[view]
+        text = self.fb.code.text(t["file"])
+        for sc in t["scripts"]:                       # 템플릿이 불러오는 JS의 문구도 그 화면 글자로 본다
+            jp = self.fb.js_path(sc["url"])
             if jp:
-                text += "\n" + self.lk.code.text(jp)
+                text += "\n" + self.fb.code.text(jp)
         return _key(text)
 
     @staticmethod
@@ -148,14 +155,15 @@ class ScreenSplitter:
                 continue
             lk = _key(label)
             for v in chosen.get(src, []):
-                for c in self.lk.templates[v].controls:
-                    ck = _key(c.text)
-                    if c.tag not in ("a", "button") or len(ck) < 2 or ck not in lk:
+                for c in self.templates[v]["controls"]:
+                    ck = _key(c["text"])
+                    if c["tag"] not in ("a", "button") or len(ck) < 2 or ck not in lk:
                         continue
-                    if c.tag == "a":
-                        method, url = "GET", norm_url(c.attrs.get("th:href") or c.attrs.get("href"))
+                    at = c["attrs"]
+                    if c["tag"] == "a":
+                        method, url = "GET", norm_url(at.get("th:href") or at.get("href"))
                     else:
-                        method, url = c.attrs.get("_form_method", "GET"), norm_url(c.attrs.get("_form_action"))
+                        method, url = at.get("_form_method", "GET"), norm_url(at.get("_form_action"))
                     for view in self._opens(method, url, hops=1):
                         yield dst, view, label
 
@@ -164,37 +172,37 @@ class ScreenSplitter:
         if not url:
             return []
         out = []
-        for r in self.jf.routes:
-            if r.http not in (method, "ANY") or not any(_match(_route_pattern(p), url) for p in r.paths):
+        for r in self.m.routes:
+            if r["http"] not in (method, "ANY") or not any(_match(_route_pattern(p), url) for p in r["paths"]):
                 continue
-            for x in r.returns:
-                if x.context != "정상 흐름":
+            for x in r["returns"]:
+                if x["context"] != "정상 흐름":
                     continue
-                if x.kind in ("view", "forward") and x.value.strip("/") in self.lk.templates:
-                    out.append(x.value.strip("/"))
-                elif x.kind == "redirect" and hops > 0:
-                    out += self._opens("GET", norm_url(x.value), hops - 1)
+                if x["kind"] in ("view", "forward") and x["value"].strip("/") in self.templates:
+                    out.append(x["value"].strip("/"))
+                elif x["kind"] == "redirect" and hops > 0:
+                    out += self._opens("GET", norm_url(x["value"]), hops - 1)
         return list(dict.fromkeys(out))
 
     def from_code_map(self, path: Path):
         cmap = read_json(path)
-        for m in cmap.get("mapping") or []:
-            sid = m.get("screen_id")
-            files = [f for f in (m.get("files") or []) if f in self.lk.code.files]
+        for mp in cmap.get("mapping") or []:
+            sid = mp.get("screen_id")
+            files = [f for f in (mp.get("files") or []) if f in self.fb.code.files]
             if not sid:
                 continue
-            views = [t.view for t in self.lk.templates.values() if t.path in files]
+            views = [t["view"] for t in self.templates.values() if t["file"] in files]
             self.matched.setdefault(sid, [])
             self.matched[sid] = sorted(set(self.matched[sid]) | set(files))
             a = self.anchors.setdefault(sid, set())
             a |= {f"file:{f}" for f in files}
-            for f in files:                       # 고른 Java 파일의 경로·메서드·폼 클래스도 붙인다
-                for c in self.jf.ix.files.get(f).classes if f in self.jf.ix.files else []:
+            for c in self.m.classes:              # 고른 Java 파일의 경로·메서드·폼 클래스도 붙인다
+                if c.file in files:
                     a.add(f"class:{c.name}")
                     a |= {f"method:{m2.qname}" for m2 in c.methods}
-                for r in self.jf.routes:
-                    if r.method.file == f:
-                        a.add(f"route:{r.label}")
+            for r in self.m.routes:
+                if r["file"] in files:
+                    a.add(f"route:{route_label(r)}")
             self._add_templates(sid, views)
 
     @staticmethod
@@ -203,40 +211,41 @@ class ScreenSplitter:
 
     def _add_templates(self, sid: str, views: list[str]):
         a = self.anchors.setdefault(sid, set())
-        routes: list[Route] = []
+        routes: list[dict] = []
         for v in views:
-            t = self.lk.templates.get(v)
+            t = self.templates.get(v)
             if t is None:
                 continue
-            a |= {f"file:{t.path}", f"view:{t.view}"}
-            refs = list(t.url_refs)
-            for url, _ in t.scripts:
-                jp = self.lk.js_path(url)
+            a |= {f"file:{t['file']}", f"view:{v}"}
+            refs = [(u["method"], u["url"]) for u in t["url_refs"]]
+            for sc in t["scripts"]:
+                jp = self.fb.js_path(sc["url"])
                 if jp:
                     a.add(f"file:{jp}")
-                    refs += self.lk.js[jp].url_refs
-            for r in self.jf.routes:
-                renders = any(x.value.strip("/") == v for x in r.views())
-                called = any(_match(_route_pattern(p), u) and (m == r.http or r.http == "ANY")
-                             for p in r.paths for m, u, *_ in refs)
+                    refs += [(u["method"], u["url"]) for u in self.fb.js[jp]["url_refs"]]
+            for r in self.m.routes:
+                renders = any(x["value"].strip("/") == v for x in views_of(r))
+                called = any(_match(_route_pattern(p), u) and (m == r["http"] or r["http"] == "ANY")
+                             for p in r["paths"] for m, u in refs)
                 if renders or called:
                     routes.append(r)
         for r in routes:
-            a.add(f"route:{r.label}")
-            a |= {f"class:{p.type}" for p in r.form_params}
+            a.add(f"route:{route_label(r)}")
+            a |= {f"class:{p}" for p in r["form_params"]}
             a |= self._methods_reached(r)
 
-    def _methods_reached(self, r: Route) -> set[str]:
-        """경로 처리 메서드에서 이어지는 서비스 메서드 (서비스 안의 호출까지 따라간다)."""
-        out, todo, seen = set(), [r.method], set()
+    def _methods_reached(self, r: dict) -> set[str]:
+        """경로 처리 메서드에서 이어지는 서비스 메서드 (서비스 안의 호출까지, 인터페이스면 구현 메서드 모두)."""
+        start = self.m.route_method(r)
+        out, todo, seen = set(), [start] if start else [], set()
         while todo:
-            m = todo.pop()
-            if m.qname in seen:
+            mm = todo.pop()
+            if (mm.file, mm.line) in seen:
                 continue
-            seen.add(m.qname)
-            out.add(f"method:{m.qname}")
-            for call in self.jf.ix.calls(m):
-                todo += self.jf.ix.resolve_targets(call)      # 인터페이스면 구현 메서드 모두
+            seen.add((mm.file, mm.line))
+            out.add(f"method:{mm.qname}")
+            for call in self.m.calls_of(mm):
+                todo += self.m.resolve_targets(call)
         return out
 
     # ------------------------------------------------ 나누기

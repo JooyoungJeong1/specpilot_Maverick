@@ -1,5 +1,9 @@
 """code_analysis 테스트. 기업 샘플 코드 대신 tests/fixtures/qna-app(가상의 앱)으로 확인한다.
 
+백엔드 분석기(Java) 결과는 tests/fixtures/qna-backend-analysis.json에 저장해 둔 것을 쓴다
+(그 앱에 실제 분석기를 돌린 결과. JDK 없이도 테스트가 돌게 하려는 것).
+분석기 jar가 있으면 test_analyzer_bridge.py의 test_real_analyzer_matches_fixture가 이 파일이 최신인지 확인한다.
+
 실행 (저장소 폴더에서): python -m pytest code_analysis/tests -q
 """
 import json
@@ -14,6 +18,7 @@ from code_analysis.facts import Fact, check
 HERE = Path(__file__).resolve().parent
 APP = HERE / "fixtures" / "qna-app"
 REQ = HERE / "fixtures" / "qna-requirements.json"
+ANALYSIS = json.loads((HERE / "fixtures" / "qna-backend-analysis.json").read_text(encoding="utf-8"))
 BACKEND = Path(__file__).resolve().parents[2] / "backend"
 
 CTRL = "src/main/java/demo/controller/QnaController.java"
@@ -23,13 +28,13 @@ JS = "src/main/resources/static/js/qna.js"
 
 @pytest.fixture(scope="module")
 def result():
-    res, problems = cli.build(APP, log=lambda *a: None)
+    res, problems = cli.build(APP, log=lambda *a: None, analysis=ANALYSIS)
     return res, problems
 
 
 @pytest.fixture(scope="module")
 def split():
-    res, _ = cli.build(APP, requirements=REQ, log=lambda *a: None)
+    res, _ = cli.build(APP, requirements=REQ, log=lambda *a: None, analysis=ANALYSIS)
     return res
 
 
@@ -112,7 +117,7 @@ def test_spring_data_service_message_validation(result):
     res, _ = result
     assert find(res, "data", "QnaRepository", "existsByTitle", "이름 규칙")
     assert find(res, "call", "QnaService.create", "QnaRepository.existsByTitle(이름 규칙 쿼리)",
-                "QnaRepository.save(Spring Data 기본 기능)")
+                "NotifyService.send(구현: MailNotifyService, SmsNotifyService)", "QnaRepository.save(Spring Data 기본 기능)")
     assert find(res, "message", "이미 있는 제목입니다.")
     v = find(res, "validation", "QnaForm.title")[0]
     assert '@NotBlank("제목을 입력하세요")' in v.fact and "max=30" in v.fact and "POST /qna (@Valid)" in v.fact
@@ -154,7 +159,7 @@ def test_split_by_code_map(tmp_path):
     cmap = tmp_path / "code_map.json"
     cmap.write_text(json.dumps({"mapping": [{"screen_id": "QNA-001", "files": ["src/main/resources/templates/qna/list.html"]}],
                                 "common_files": []}), encoding="utf-8")
-    res, _ = cli.build(APP, code_map=cmap, log=lambda *a: None)
+    res, _ = cli.build(APP, code_map=cmap, log=lambda *a: None, analysis=ANALYSIS)
     q1 = res["screens"]["QNA-001"]
     assert any("GET /qna →" in f.fact for f in q1)
     assert not any("errorMessage" in f.fact for f in q1)
@@ -164,7 +169,10 @@ def test_split_by_code_map(tmp_path):
 
 def test_output_matches_backend_format(tmp_path):
     out = tmp_path / "code_facts.json"
-    assert cli.main(["--code", str(APP), "--requirements", str(REQ), "--out", str(out)]) == 0
+    saved = tmp_path / "backend-analysis.json"
+    saved.write_text(json.dumps(ANALYSIS, ensure_ascii=False), encoding="utf-8")
+    assert cli.main(["--code", str(APP), "--requirements", str(REQ), "--out", str(out), "--analysis", str(saved)]) == 0
+    assert (tmp_path / "frontend-js.json").is_file()
     obj = json.loads(out.read_text(encoding="utf-8"))
     assert isinstance(obj["common"], list) and isinstance(obj["screens"], dict)
     for f in obj["common"] + [x for xs in obj["screens"].values() for x in xs]:
@@ -176,3 +184,24 @@ def test_output_matches_backend_format(tmp_path):
         pytest.skip("backend의 judge를 불러올 수 없음 (패키지 미설치)")
     facts = load_facts(out)
     assert len(facts_for(facts, "QNA-002")) == len(obj["common"]) + len(obj["screens"]["QNA-002"])
+
+
+# ---------------------------------------------------------------- 호출 대상 (분석기 결과 + 채우기)
+
+def test_call_targets_from_analyzer():
+    from code_analysis.backend_model import BackendModel
+    m = BackendModel(ANALYSIS)
+    by = {(c.raw["caller_class"], c.raw["name"]): c for c in m.calls}
+    send = by[("QnaService", "send")]                       # 인터페이스 → 구현 둘 다 (분석기가 구현 위치를 줌)
+    assert send.source == "javaparser"
+    assert {x.qname for x in m.resolve_targets(send)} == {"NotifyService.send", "MailNotifyService.send", "SmsNotifyService.send"}
+    close = by[("AdminQnaController", "close")]             # 부모 클래스(BaseController)의 필드로 받은 서비스
+    assert close.source == "javaparser" and close.target.name == "QnaService"
+    exists = by[("QnaService", "existsByTitle")]            # 라이브러리 classpath 없이: 메서드는 못 풀어도 받는 쪽 타입으로 잇는다
+    assert exists.source == "receiver_type" and exists.target.name == "QnaRepository"
+    assert by[("QnaController", "addAttribute")].target is None    # 라이브러리(Model) 호출은 사실에 쓰지 않는다
+
+
+def test_inherited_field_route_calls(result):
+    res, _ = result
+    assert find(res, "route", "POST /admin/qna/{id}/close", "호출 QnaService.close")

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.thinktree.specpilot</groupId>
+  <artifactId>specpilot-analyzer</artifactId>
+  <version>0.8.0</version>
+  <packaging>jar</packaging>
+  <name>specpilot-analyzer</name>
+  <description>JavaParser + Symbol Solver(+ Jsoup)로 Gradle 기반 프로젝트를 분석하는 도구</description>
+
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <!--
+    주의: 여기엔 더 이상 Spring Boot 의존성을 직접 넣지 않는다.
+    분석 대상(Gradle 프로젝트)이 실제로 쓰는 라이브러리 jar들은
+    빌드 방식(Maven/Gradle)과 무관하게 런타임에 JarTypeSolver로 동적으로
+    추가한다 (Main.java의 classpath 파일 인자 참고). 이렇게 하면 분석 도구가
+    대상 프로젝트의 Spring 버전이 바뀌어도 pom.xml을 매번 안 고쳐도 된다.
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>com.github.javaparser</groupId>
+      <artifactId>javaparser-symbol-solver-core</artifactId>
+      <version>3.26.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.18.1</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>com.thinktree.specpilot.analyzer.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
