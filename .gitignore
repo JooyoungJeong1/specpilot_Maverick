@@ -36,3 +36,4 @@ code_analysis/out/
 target/
 .gradle/
 *.class
+/code_analysis/tests/fixtures/qna-app
