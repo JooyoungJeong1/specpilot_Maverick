@@ -1,0 +1,1538 @@
+{
+  "meta": {
+    "merged_at": "2026-10-16T03:15:39",
+    "run_dir": "qna-example"
+  },
+  "app_profile": {
+    "screens": [
+      {
+        "screen_id": "MEM-001",
+        "name": "로그인",
+        "depth": "회원",
+        "pages": [
+          1,
+          2
+        ],
+        "type": "화면",
+        "state_pages": [
+          2
+        ],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "MEM-002",
+        "name": "회원가입",
+        "depth": "회원",
+        "pages": [
+          3
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-001",
+        "name": "문의 목록",
+        "depth": "고객센터",
+        "pages": [
+          4
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-002",
+        "name": "문의 작성",
+        "depth": "고객센터",
+        "pages": [
+          5
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-003",
+        "name": "문의 상세",
+        "depth": "고객센터",
+        "pages": [
+          6
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-004",
+        "name": "답변 작성",
+        "depth": "고객센터",
+        "pages": [
+          7
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-005",
+        "name": "문의 수정",
+        "depth": "고객센터",
+        "pages": [
+          8
+        ],
+        "type": "화면",
+        "state_pages": [],
+        "repeats_from": null
+      },
+      {
+        "screen_id": "QNA-006",
+        "name": "문의 삭제 확인",
+        "depth": "고객센터",
+        "pages": [
+          9
+        ],
+        "type": "팝업",
+        "state_pages": [],
+        "repeats_from": {
+          "screen_id": "QNA-005",
+          "items": [
+            "Description 0"
+          ]
+        }
+      }
+    ],
+    "flows": [
+      {
+        "from": "MEM-001",
+        "trigger": "회원가입",
+        "to": "MEM-002",
+        "source": "MEM-001 Action F"
+      },
+      {
+        "from": "QNA-001",
+        "trigger": "문의하기",
+        "to": "QNA-002",
+        "source": "QNA-001 Action C"
+      },
+      {
+        "from": "QNA-003",
+        "trigger": "답변하기",
+        "to": "QNA-004",
+        "source": "QNA-003 Action C"
+      },
+      {
+        "from": "QNA-003",
+        "trigger": "수정하기",
+        "to": "QNA-005",
+        "source": "QNA-003 Action D"
+      },
+      {
+        "from": "QNA-005",
+        "trigger": "삭제하기",
+        "to": "QNA-006",
+        "source": "QNA-005 Action C"
+      }
+    ],
+    "common_areas": [
+      {
+        "name": "상단 로그아웃",
+        "described_in": "QNA-001",
+        "described_scope": [
+          "로그아웃 확인 알림창 표시",
+          "예: 세션 종료 후 로그인 화면 이동",
+          "아니오: 현재 화면 유지"
+        ],
+        "appears_in": [
+          "QNA-001",
+          "QNA-002",
+          "QNA-003",
+          "QNA-004",
+          "QNA-005"
+        ]
+      },
+      {
+        "name": "좌측 메뉴",
+        "described_in": "QNA-001",
+        "described_scope": [
+          "선택된 메뉴 강조"
+        ],
+        "appears_in": [
+          "QNA-001",
+          "QNA-002",
+          "QNA-003",
+          "QNA-004",
+          "QNA-005"
+        ]
+      }
+    ],
+    "login_required": [
+      {
+        "screen_id": "MEM-001",
+        "value": false,
+        "evidence": "로그인 화면"
+      },
+      {
+        "screen_id": "MEM-002",
+        "value": false,
+        "evidence": "로그인 전에 쓰는 화면 (MEM-001 '회원가입' 링크)"
+      },
+      {
+        "screen_id": "QNA-001",
+        "value": true,
+        "evidence": "QNA-001 상단 로그아웃 버튼"
+      },
+      {
+        "screen_id": "QNA-002",
+        "value": true,
+        "evidence": "상단 로그아웃 버튼 (화면 이미지)"
+      },
+      {
+        "screen_id": "QNA-003",
+        "value": true,
+        "evidence": "상단 로그아웃 버튼 (화면 이미지)"
+      },
+      {
+        "screen_id": "QNA-004",
+        "value": true,
+        "evidence": "상단 로그아웃 버튼 (화면 이미지)"
+      },
+      {
+        "screen_id": "QNA-005",
+        "value": true,
+        "evidence": "상단 로그아웃 버튼 (화면 이미지)"
+      },
+      {
+        "screen_id": "QNA-006",
+        "value": true,
+        "evidence": "부모 화면 QNA-005를 따름"
+      }
+    ],
+    "roles": [
+      {
+        "name": "상담원",
+        "origin": "명시",
+        "evidence": "QNA-003 Description 3 '답변은 상담원만 작성한다'"
+      },
+      {
+        "name": "(이름 미명시)",
+        "origin": "함의",
+        "evidence": "QNA-001 Description 4 '문의 게시물은 목록 화면에서 삭제할 수 없다' / QNA-005 '삭제하기' 버튼"
+      }
+    ],
+    "role_limited": [
+      {
+        "feature": "답변 작성",
+        "screen_id": "QNA-003",
+        "element": "답변하기 버튼",
+        "opens": "QNA-004",
+        "allowed": [
+          "상담원"
+        ],
+        "origin": "명시",
+        "evidence": "QNA-003 Description 3",
+        "reason": null
+      },
+      {
+        "feature": "문의 삭제",
+        "screen_id": "QNA-005",
+        "element": "삭제하기 버튼",
+        "opens": "QNA-006",
+        "allowed": [
+          "(이름 미명시)"
+        ],
+        "origin": "함의",
+        "evidence": "QNA-001 Description 4 '문의 게시물은 목록 화면에서 삭제할 수 없다' / QNA-005 '삭제하기' 버튼",
+        "reason": "목록 화면에서는 삭제할 수 없다고 하면서 수정 화면에는 삭제하기 버튼이 있으므로, 삭제할 수 있는 다른 사용자가 있어야 한다"
+      }
+    ],
+    "reading_notes": []
+  },
+  "units": [
+    {
+      "id": "REQ-APP-01",
+      "key": "a01",
+      "screen_id": "APP",
+      "source": [
+        "MEM-001 Description 0",
+        "QNA-001 화면 이미지"
+      ],
+      "quote": "회원만 문의를 남길 수 있다 / 상단 로그아웃 버튼",
+      "origin": "함의",
+      "reason": "문의 화면은 로그인한 상태를 전제로 그려져 있고 문의는 회원만 남길 수 있으므로, 로그인하지 않으면 문의 화면을 쓸 수 없다",
+      "kind": "접근",
+      "given": "로그아웃 상태",
+      "when": "문의 목록 주소로 직접 들어간다",
+      "conditions": [],
+      "then": "문의 목록을 볼 수 없다",
+      "exact": {
+        "message": null,
+        "values": [
+          "QNA-001",
+          "QNA-002",
+          "QNA-003"
+        ],
+        "target": null
+      },
+      "issue": "볼 수 없을 때 로그인 화면으로 보내는지 안내만 하는지 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-APP-02",
+      "key": "a02",
+      "screen_id": "APP",
+      "source": [
+        "MEM-001 Description 2",
+        "MEM-002 Action A"
+      ],
+      "quote": "회원가입 시 설정한 이메일(ID)와 비밀번호로 로그인한다 / 가입하기: 회원 정보를 저장하고 로그인 화면으로 이동한다",
+      "origin": "함의",
+      "reason": "로그인은 가입할 때 설정한 이메일과 비밀번호로 하고 가입하면 그 정보가 저장되므로, 가입한 계정으로 로그인할 수 있어야 한다",
+      "kind": "처리",
+      "given": "회원가입을 마친 상태",
+      "when": "로그인 화면에서 가입 때 입력한 이메일과 비밀번호로 로그인한다",
+      "conditions": [],
+      "then": "로그인된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": "로그인 성공 뒤 이동하는 화면이 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-APP-03",
+      "key": "a03",
+      "screen_id": "APP",
+      "source": [
+        "QNA-005 Action A",
+        "QNA-001 Description 2"
+      ],
+      "quote": "수정 내용을 저장하고 문의 상세(QNA-003)로 이동한다 / 목록에는 작성자 본인의 문의와 비공개가 아닌 문의가 표시된다",
+      "origin": "함의",
+      "reason": "수정하면 내용이 저장되고 목록은 작성자 본인의 문의를 표시하므로, 제목을 바꾸면 본인의 목록에도 바뀐 제목이 보여야 한다",
+      "kind": "처리",
+      "given": "문의 제목을 수정해 저장한 상태",
+      "when": "작성자 본인 계정으로 문의 목록을 본다",
+      "conditions": [],
+      "then": "바뀐 제목이 목록에 표시된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-001-01",
+      "key": "u01",
+      "screen_id": "MEM-001",
+      "source": [
+        "Description 0"
+      ],
+      "quote": "이메일, 비밀번호 입력란과 로그인 버튼이 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "로그인 화면에 들어간다",
+      "conditions": [],
+      "then": "이메일, 비밀번호 입력란과 로그인 버튼이 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "이메일",
+          "비밀번호",
+          "로그인"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-001-02",
+      "key": "u02",
+      "screen_id": "MEM-001",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "회원가입 시 설정한 이메일(ID)와 비밀번호로 로그인한다",
+      "origin": "명시",
+      "reason": null,
+      "kind": "처리",
+      "given": null,
+      "when": "이메일과 비밀번호를 입력하고 로그인 버튼을 누른다",
+      "conditions": [
+        "가입된 이메일과 비밀번호"
+      ],
+      "then": "로그인된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": "로그인 성공 뒤 이동하는 화면이 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-001-03",
+      "key": "u03",
+      "screen_id": "MEM-001",
+      "source": [
+        "Action E"
+      ],
+      "quote": "* error-msg: 이메일 또는 비밀번호가 올바르지 않습니다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "실패",
+      "given": null,
+      "when": "로그인 버튼을 누른다",
+      "conditions": [
+        "이메일 또는 비밀번호가 틀림"
+      ],
+      "then": "로그인 실패 안내 문구가 표시된다",
+      "exact": {
+        "message": "이메일 또는 비밀번호가 올바르지 않습니다.",
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-001-04",
+      "key": "u04",
+      "screen_id": "MEM-001",
+      "source": [
+        "Action F"
+      ],
+      "quote": "회원가입: 회원가입 화면(MEM-002)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "회원가입 링크를 누른다",
+      "conditions": [],
+      "then": "회원가입 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "MEM-002"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-001-05",
+      "key": "u05",
+      "screen_id": "MEM-001",
+      "source": [
+        "상태 화면 p.2"
+      ],
+      "quote": "로그인에 실패하면 입력한 이메일은 지우지 않는다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "상태",
+      "given": null,
+      "when": "로그인에 실패한다",
+      "conditions": [],
+      "then": "입력한 이메일이 입력란에 남아 있다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-002-01",
+      "key": "u01",
+      "screen_id": "MEM-002",
+      "source": [
+        "Description 0"
+      ],
+      "quote": "이메일, 비밀번호, 비밀번호 확인 입력란과 가입하기 버튼이 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "회원가입 화면에 들어간다",
+      "conditions": [],
+      "then": "이메일, 비밀번호, 비밀번호 확인 입력란과 가입하기 버튼이 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "이메일",
+          "비밀번호",
+          "비밀번호 확인",
+          "가입하기"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-002-02",
+      "key": "u02",
+      "screen_id": "MEM-002",
+      "source": [
+        "Description 1"
+      ],
+      "quote": "포커스 아웃 시 이메일 형식이 아니면 에러 메시지를 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "이메일 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "이메일 형식이 아님"
+      ],
+      "then": "이메일 입력란 아래에 오류 메시지가 표시된다",
+      "exact": {
+        "message": "이메일 형식이 올바르지 않습니다.",
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-002-03",
+      "key": "u03",
+      "screen_id": "MEM-002",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "비밀번호가 8자 미만이면 에러 메시지를 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "비밀번호 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "비밀번호가 8자 미만"
+      ],
+      "then": "오류 메시지가 표시된다",
+      "exact": {
+        "message": "비밀번호는 8자 이상 입력해주세요.",
+        "values": [
+          "8자 이상"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-002-04",
+      "key": "u04",
+      "screen_id": "MEM-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "가입하기: 회원 정보를 저장하고",
+      "origin": "명시",
+      "reason": null,
+      "kind": "처리",
+      "given": null,
+      "when": "가입하기 버튼을 누른다",
+      "conditions": [],
+      "then": "회원 정보가 저장된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-MEM-002-05",
+      "key": "u05",
+      "screen_id": "MEM-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "로그인 화면으로 이동한다",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "가입하기 버튼을 누른다",
+      "conditions": [],
+      "then": "로그인 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "MEM-001"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-001-01",
+      "key": "u01",
+      "screen_id": "QNA-001",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "목록에는 작성자 본인의 문의와 비공개가 아닌 문의가 표시된다",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "문의 목록 화면에 들어간다",
+      "conditions": [],
+      "then": "본인의 문의와 공개 문의가 목록에 표시된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-001-02",
+      "key": "u02",
+      "screen_id": "QNA-001",
+      "source": [
+        "Description 4"
+      ],
+      "quote": "문의 게시물은 목록 화면에서 삭제할 수 없다",
+      "origin": "명시",
+      "reason": null,
+      "kind": "접근",
+      "given": null,
+      "when": "문의 목록 화면을 본다",
+      "conditions": [],
+      "then": "목록에 삭제 버튼이 보이지 않는다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-001-03",
+      "key": "u03",
+      "screen_id": "QNA-001",
+      "source": [
+        "Action C"
+      ],
+      "quote": "문의하기: 문의 작성(QNA-002)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "문의하기 버튼을 누른다",
+      "conditions": [],
+      "then": "문의 작성 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-002"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-01",
+      "key": "u01",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 0"
+      ],
+      "quote": "문의 유형, 제목, 내용 입력란과 비공개 체크박스가 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "문의 작성 화면에 들어간다",
+      "conditions": [],
+      "then": "문의 유형, 제목, 내용 입력란과 비공개 체크박스가 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "문의 유형",
+          "제목",
+          "내용",
+          "비공개"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-02",
+      "key": "u02",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 1"
+      ],
+      "quote": "제목은 30자까지 입력할 수 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "제목 입력란에 입력한다",
+      "conditions": [
+        "30자를 넘게 입력함"
+      ],
+      "then": "30자까지만 입력된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "최대 30자"
+        ],
+        "target": null
+      },
+      "issue": "30자를 넘을 때 입력을 막는지 오류를 안내하는지 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-03",
+      "key": "u03",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 1"
+      ],
+      "quote": "포커스 아웃 시 제목이 비어 있으면 에러 메시지를 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "제목 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "제목이 비어 있음"
+      ],
+      "then": "제목 입력란 아래에 오류 메시지가 표시된다",
+      "exact": {
+        "message": "제목을 입력해주세요.",
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-04",
+      "key": "u04",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "포커스 아웃 시 10자 미만이면 에러 메시지를 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "내용 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "내용이 10자 미만"
+      ],
+      "then": "오류 메시지가 표시된다",
+      "exact": {
+        "message": "내용을 10자 이상 입력해주세요.",
+        "values": [
+          "10자 이상"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-05",
+      "key": "u05",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "(서버 확인 없이 체크한다.)",
+      "origin": "명시",
+      "reason": null,
+      "kind": "제약",
+      "given": null,
+      "when": "내용 길이를 검사할 때",
+      "conditions": [],
+      "then": "서버 확인 없이 체크한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-06",
+      "key": "u06",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "단, 금지어 포함 여부는 체크하지 않는다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "내용 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "내용이 10자 이상",
+        "내용에 금지어가 들어 있음"
+      ],
+      "then": "오류 메시지가 표시되지 않는다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-07",
+      "key": "u07",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 3"
+      ],
+      "quote": "문의 유형, 제목, 내용이 모두 만족되면 등록 버튼이 활성화된다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "상태",
+      "given": null,
+      "when": "입력란을 채운다",
+      "conditions": [
+        "문의 유형이 선택됨",
+        "제목이 입력 조건을 만족함",
+        "내용이 입력 조건을 만족함"
+      ],
+      "then": "등록 버튼이 활성화된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-08",
+      "key": "u08",
+      "screen_id": "QNA-002",
+      "source": [
+        "Description 4"
+      ],
+      "quote": "선택된 문의 유형은 파란색 테두리로 강조된다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "상태",
+      "given": null,
+      "when": "문의 유형을 선택한다",
+      "conditions": [],
+      "then": "선택한 유형이 강조 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "파란색 테두리"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-09",
+      "key": "u09",
+      "screen_id": "QNA-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "문의가 저장되고",
+      "origin": "명시",
+      "reason": null,
+      "kind": "처리",
+      "given": "등록 버튼이 활성화된 상태",
+      "when": "등록 버튼을 누른다",
+      "conditions": [],
+      "then": "문의가 저장된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-10",
+      "key": "u10",
+      "screen_id": "QNA-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "\"문의가 등록되었습니다.\" 팝업이 표시된 뒤",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": "등록 버튼이 활성화된 상태",
+      "when": "등록 버튼을 누른다",
+      "conditions": [],
+      "then": "등록 완료 팝업이 표시된다",
+      "exact": {
+        "message": "문의가 등록되었습니다.",
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-11",
+      "key": "u11",
+      "screen_id": "QNA-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "문의 목록(QNA-001)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": "등록 완료 팝업이 표시된 상태",
+      "when": "팝업이 닫힌다",
+      "conditions": [],
+      "then": "문의 목록 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-001"
+      },
+      "issue": "팝업이 저절로 닫히는지 확인 버튼을 눌러야 하는지 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-12",
+      "key": "u12",
+      "screen_id": "QNA-002",
+      "source": [
+        "Action B"
+      ],
+      "quote": "체크한 문의는 작성자 본인만 볼 수 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "접근",
+      "given": "다른 사용자 계정으로 로그인한 상태",
+      "when": "비공개로 등록된 문의를 연다",
+      "conditions": [],
+      "then": "문의 내용을 볼 수 없다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": "볼 수 없을 때 안내 문구나 이동 화면이 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-002-13",
+      "key": "u13",
+      "screen_id": "QNA-002",
+      "source": [
+        "Action A"
+      ],
+      "quote": "문의가 저장되고 / 문의 목록(QNA-001)으로 이동한다.",
+      "origin": "함의",
+      "reason": "등록하면 문의가 저장되고 문의 목록으로 이동하므로, 그 목록에 방금 등록한 문의가 보여야 한다",
+      "kind": "처리",
+      "given": "문의를 등록한 상태",
+      "when": "문의 목록 화면을 본다",
+      "conditions": [],
+      "then": "방금 등록한 문의가 목록에 표시된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-001"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-003-01",
+      "key": "u01",
+      "screen_id": "QNA-003",
+      "source": [
+        "Description 1"
+      ],
+      "quote": "문의 제목, 작성일, 내용과 답변이 표시된다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "문의 상세 화면에 들어간다",
+      "conditions": [],
+      "then": "문의 제목, 작성일, 내용과 답변이 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "제목",
+          "작성일",
+          "내용",
+          "답변"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-003-02",
+      "key": "u02",
+      "screen_id": "QNA-003",
+      "source": [
+        "Description 3"
+      ],
+      "quote": "답변은 상담원만 작성한다",
+      "origin": "명시",
+      "reason": null,
+      "kind": "접근",
+      "given": "상담원이 아닌 계정으로 로그인한 상태",
+      "when": "문의 상세 화면을 본다",
+      "conditions": [],
+      "then": "답변하기 버튼이 보이지 않는다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-003-03",
+      "key": "u03",
+      "screen_id": "QNA-003",
+      "source": [
+        "Action C"
+      ],
+      "quote": "답변하기: 답변 작성(QNA-004)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": "상담원 계정으로 로그인한 상태",
+      "when": "답변하기 버튼을 누른다",
+      "conditions": [],
+      "then": "답변 작성 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-004"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-003-04",
+      "key": "u04",
+      "screen_id": "QNA-003",
+      "source": [
+        "Action D"
+      ],
+      "quote": "수정하기: 문의 수정(QNA-005)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "수정하기 버튼을 누른다",
+      "conditions": [],
+      "then": "문의 수정 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-005"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-01",
+      "key": "u01",
+      "screen_id": "QNA-005",
+      "source": [
+        "Description 0"
+      ],
+      "quote": "문의를 수정하는 화면으로 제목과 내용 입력란이 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "표시",
+      "given": null,
+      "when": "문의 수정 화면에 들어간다",
+      "conditions": [],
+      "then": "제목과 내용 입력란이 표시된다",
+      "exact": {
+        "message": null,
+        "values": [
+          "제목",
+          "내용"
+        ],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-02",
+      "key": "u02",
+      "screen_id": "QNA-005",
+      "source": [
+        "Description 1"
+      ],
+      "quote": "제목은 문의 작성 화면(QNA-002)과 같은 글자 수까지 입력할 수 있다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "제목 입력란에 입력한다",
+      "conditions": [
+        "제한 글자 수를 넘게 입력함"
+      ],
+      "then": "제한 글자 수까지만 입력된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": "값이 이 화면에 없음. 제한을 넘을 때 입력을 막는지 오류를 안내하는지도 설계서에 없음",
+      "ref_hint": {
+        "screen_id": "QNA-002",
+        "source": "Description 1",
+        "value": "30자"
+      }
+    },
+    {
+      "id": "REQ-QNA-005-03",
+      "key": "u03",
+      "screen_id": "QNA-005",
+      "source": [
+        "Description 3"
+      ],
+      "quote": "포커스 아웃 시 내용이 비어 있으면 에러 메시지를 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "검증",
+      "given": null,
+      "when": "내용 입력란에서 다른 곳으로 이동한다",
+      "conditions": [
+        "내용이 비어 있음"
+      ],
+      "then": "오류 메시지가 표시된다",
+      "exact": {
+        "message": "내용을 입력해주세요.",
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-04",
+      "key": "u04",
+      "screen_id": "QNA-005",
+      "source": [
+        "Description 2"
+      ],
+      "quote": "제목과 이메일이 입력되면 저장 버튼이 활성화된다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "상태",
+      "given": null,
+      "when": "입력란을 채운다",
+      "conditions": [
+        "제목이 입력됨"
+      ],
+      "then": "저장 버튼이 활성화된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": "원문은 '이메일'이라 하나 이 화면에는 이메일 입력란이 없음(내용 입력란은 있음). 조건에 내용 입력이 들어가는지 확인 필요. 이미지로 확인되는 제목 조건만 적음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-05",
+      "key": "u05",
+      "screen_id": "QNA-005",
+      "source": [
+        "Action A"
+      ],
+      "quote": "수정 내용을 저장하고",
+      "origin": "명시",
+      "reason": null,
+      "kind": "처리",
+      "given": "저장 버튼이 활성화된 상태",
+      "when": "저장 버튼을 누른다",
+      "conditions": [],
+      "then": "수정한 내용이 저장된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-06",
+      "key": "u06",
+      "screen_id": "QNA-005",
+      "source": [
+        "Action A"
+      ],
+      "quote": "문의 상세(QNA-003)로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": "저장 버튼이 활성화된 상태",
+      "when": "저장 버튼을 누른다",
+      "conditions": [],
+      "then": "문의 상세 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-003"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-07",
+      "key": "u07",
+      "screen_id": "QNA-005",
+      "source": [
+        "Action B"
+      ],
+      "quote": "취소: 문의 상셰(QNA-003)로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "취소 버튼을 누른다",
+      "conditions": [],
+      "then": "문의 상세 화면으로 이동한다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-003"
+      },
+      "issue": "수정한 내용이 있을 때 바로 이동하는지 확인을 받는지 설계서에 없음",
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-005-08",
+      "key": "u08",
+      "screen_id": "QNA-005",
+      "source": [
+        "Action C"
+      ],
+      "quote": "삭제 확인 팝업(QNA-006)을 표시한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "삭제하기 버튼을 누른다",
+      "conditions": [],
+      "then": "삭제 확인 팝업이 표시된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": "QNA-006"
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-006-01",
+      "key": "u01",
+      "screen_id": "QNA-006",
+      "source": [
+        "Action A"
+      ],
+      "quote": "예: 문의를 삭제하고 문의 목록(QNA-001)으로 이동한다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "처리",
+      "given": null,
+      "when": "예 버튼을 누른다",
+      "conditions": [],
+      "then": "문의가 삭제된다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    },
+    {
+      "id": "REQ-QNA-006-02",
+      "key": "u02",
+      "screen_id": "QNA-006",
+      "source": [
+        "Action B"
+      ],
+      "quote": "아니오: 팝업을 닫는다.",
+      "origin": "명시",
+      "reason": null,
+      "kind": "이동",
+      "given": null,
+      "when": "아니오 버튼을 누른다",
+      "conditions": [],
+      "then": "삭제 확인 팝업이 닫힌다",
+      "exact": {
+        "message": null,
+        "values": [],
+        "target": null
+      },
+      "issue": null,
+      "ref_hint": null
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q-APP-03",
+      "key": "q03",
+      "topic": "문의 삭제 권한",
+      "question": "문의를 삭제할 수 있는 사용자는 누구인가요? 삭제할 수 없는 사용자에게는 수정 화면의 삭제하기 버튼을 숨기나요?",
+      "why": "QNA-001 Description 4는 목록 화면에서 삭제할 수 없다고 하고 QNA-005에는 삭제하기 버튼이 있어 서로 맞지 않음. 삭제할 수 있는 사용자의 이름이 설계서에 없음",
+      "priority": "상",
+      "related_units": []
+    },
+    {
+      "id": "Q-MEM-002-01",
+      "key": "q01",
+      "topic": "비밀번호 확인 검사",
+      "question": "비밀번호 확인이 비밀번호와 다르면 어떤 문구를 보여 주나요?",
+      "why": "MEM-002 그림에 비밀번호 확인 입력란은 있으나 설명에 일치 검사 규칙과 문구가 없어 결과를 정할 수 없음",
+      "priority": "상",
+      "related_units": [
+        "REQ-MEM-002-01"
+      ]
+    },
+    {
+      "id": "Q-APP-01",
+      "key": "q01",
+      "topic": "로그인 실패 제한",
+      "question": "로그인에 연속으로 실패하면 제한을 두나요? 둔다면 몇 회, 얼마 동안인가요?",
+      "why": "설계서에 로그인 실패 안내 문구만 있고 제한 규칙은 없음 (MEM-001 Action E)",
+      "priority": "하",
+      "related_units": []
+    },
+    {
+      "id": "Q-APP-02",
+      "key": "q02",
+      "topic": "로그인 후 이동",
+      "question": "로그인하면 어느 화면으로 가나요? 로그인 전에 열려던 화면이 있으면 그 화면으로 돌아가나요?",
+      "why": "로그인 성공 후 이동 화면이 설계서에 없음",
+      "priority": "하",
+      "related_units": [
+        "REQ-APP-01",
+        "REQ-APP-02"
+      ]
+    },
+    {
+      "id": "Q-APP-04",
+      "key": "q04",
+      "topic": "좌측 메뉴 이동",
+      "question": "좌측 메뉴를 누르면 어느 화면으로 이동하나요?",
+      "why": "좌측 메뉴는 선택된 메뉴 강조만 설명되어 있고 이동 대상이 없음 (QNA-001 Action B)",
+      "priority": "하",
+      "related_units": []
+    },
+    {
+      "id": "Q-QNA-001-01",
+      "key": null,
+      "topic": "근거가 약한 함의",
+      "question": "문의 목록 화면에 들어간다 → 문의가 최신순으로 표시된다 동작이 필요한가요?",
+      "why": "함의로 분류됐지만 근거 원문이 하나뿐임. 프로그램이 단위에서 질문으로 옮김 (원래 단위는 draft_unit)",
+      "priority": "하",
+      "related_units": [],
+      "draft_unit": {
+        "id": "REQ-QNA-001-04",
+        "key": "u04",
+        "screen_id": "QNA-001",
+        "source": [
+          "Description 2"
+        ],
+        "quote": "목록에는 작성자 본인의 문의와 비공개가 아닌 문의가 표시된다",
+        "origin": "함의",
+        "reason": "목록에 본인 문의와 공개 문의가 함께 표시되므로, 최근 문의를 찾기 쉽게 최신순으로 표시되어야 한다",
+        "kind": "표시",
+        "given": null,
+        "when": "문의 목록 화면에 들어간다",
+        "conditions": [],
+        "then": "문의가 최신순으로 표시된다",
+        "exact": {
+          "message": null,
+          "values": [],
+          "target": null
+        },
+        "issue": null,
+        "ref_hint": null
+      }
+    },
+    {
+      "id": "Q-QNA-002-01",
+      "key": "q01",
+      "topic": "태그가 들어간 제목",
+      "question": "제목에 HTML 태그를 입력하면 목록과 상세에서 글자 그대로 보여야 하나요?",
+      "why": "설계서에 입력값을 어떻게 표시하는지 규칙이 없음. 보안상 보통 정해 두는 항목",
+      "priority": "하",
+      "related_units": [
+        "REQ-QNA-002-03"
+      ]
+    },
+    {
+      "id": "Q-QNA-002-02",
+      "key": "q02",
+      "topic": "등록 버튼 연속 클릭",
+      "question": "등록 버튼을 빠르게 두 번 누르면 한 건만 등록되어야 하나요?",
+      "why": "설계서에 중복 등록 처리 규칙이 없음",
+      "priority": "하",
+      "related_units": [
+        "REQ-QNA-002-09"
+      ]
+    }
+  ],
+  "skipped": {
+    "MEM-001": [
+      {
+        "source": "Description 1",
+        "reason": "로고 배치(디자인)"
+      }
+    ],
+    "MEM-002": [],
+    "QNA-001": [
+      {
+        "source": "Description 0",
+        "reason": "화면 개요"
+      },
+      {
+        "source": "Action B",
+        "reason": "좌측 메뉴 (공통 영역)"
+      }
+    ],
+    "QNA-002": [
+      {
+        "source": "Description 5",
+        "reason": "버튼 배치(디자인)"
+      }
+    ],
+    "QNA-003": [],
+    "QNA-005": [],
+    "QNA-006": []
+  },
+  "screen_status": {
+    "MEM-001": {
+      "status": "완료",
+      "units": 5,
+      "questions": 0,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "MEM-002": {
+      "status": "완료",
+      "units": 5,
+      "questions": 1,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "QNA-001": {
+      "status": "완료",
+      "units": 3,
+      "questions": 1,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "QNA-002": {
+      "status": "완료",
+      "units": 13,
+      "questions": 2,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "QNA-003": {
+      "status": "확인필요",
+      "units": 4,
+      "questions": 0,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "QNA-004": {
+      "status": "반려",
+      "units": 0,
+      "reject_reason": "그림 마커와 설명 번호가 절반 넘게 맞지 않음 (그림 A~D, 설명 A~F)",
+      "rejected_by": "게이트(입력 점검)"
+    },
+    "QNA-005": {
+      "status": "완료",
+      "units": 8,
+      "questions": 0,
+      "attempts": 1,
+      "prompt_version": "mock"
+    },
+    "QNA-006": {
+      "status": "완료",
+      "units": 2,
+      "questions": 0,
+      "attempts": 1,
+      "prompt_version": "mock"
+    }
+  },
+  "rejected_screens": {
+    "QNA-004": "그림 마커와 설명 번호가 절반 넘게 맞지 않음 (그림 A~D, 설명 A~F)"
+  },
+  "rejected_units": {
+    "QNA-003": {
+      "units": [
+        {
+          "unit": {
+            "key": "u05",
+            "screen_id": "QNA-003",
+            "source": [
+              "Action E"
+            ],
+            "quote": "목록: 문의 목록으로 돌아간다.",
+            "origin": "명시",
+            "reason": null,
+            "kind": "알림",
+            "given": null,
+            "when": "목록 버튼을 누른다",
+            "conditions": [],
+            "then": "문의 목록 화면으로 이동한다",
+            "exact": {
+              "message": null,
+              "values": [],
+              "target": null
+            },
+            "issue": null,
+            "ref_hint": null
+          },
+          "errors": [
+            "kind 값이 허용 목록에 없습니다: 알림"
+          ]
+        }
+      ],
+      "questions": []
+    }
+  }
+}

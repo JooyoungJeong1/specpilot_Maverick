@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- 가상 문의 앱 (mock). 실제 코드가 아니다. -->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<form id="qnaForm" method="post" action="/qna">
+  <select id="type" name="type">
+    <option value="">문의 유형</option>
+    <option value="account">계정</option>
+    <option value="etc">기타</option>
+  </select>
+  <input type="text" id="title" name="title" maxlength="30" placeholder="제목">
+  <p class="error" id="titleError"></p>
+  <textarea id="content" name="content" placeholder="내용"></textarea>
+  <p class="error" id="contentError"></p>
+  <button type="submit" id="submitBtn">등록</button>
+</form>
+<script src="/js/qna.js"></script>
+</body>
+</html>

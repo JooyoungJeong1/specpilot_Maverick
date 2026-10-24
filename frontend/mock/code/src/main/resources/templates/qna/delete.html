@@ -1,0 +1,8 @@
+<!-- 가상 문의 앱 (mock). 실제 코드가 아니다. -->
+<div class="popup" id="deletePopup">
+  <p>문의를 삭제하시겠습니까?</p>
+  <form method="post" th:action="@{/qna/{id}/delete(id=${qna.id})}">
+    <button type="submit">예</button>
+  </form>
+  <button type="button" onclick="document.getElementById('deletePopup').hidden = true">아니오</button>
+</div>

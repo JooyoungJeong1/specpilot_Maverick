@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- 가상 문의 앱 (mock). 실제 코드가 아니다. -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>로그인</title>
+  <script src="/js/member.js" defer></script>
+</head>
+<body>
+<form id="loginForm" method="post" action="/login">
+  <input type="email" id="email" name="email" placeholder="이메일">
+  <input type="password" id="password" name="password" placeholder="비밀번호">
+  <p class="error" th:if="${param.error}">이메일 또는 비밀번호를 확인해주세요.</p>
+  <button type="submit" id="loginBtn">로그인</button>
+</form>
+<a href="/signup">회원가입</a>
+</body>
+</html>

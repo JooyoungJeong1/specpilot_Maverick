@@ -1,0 +1,58 @@
+/* 디자인 토큰: local/reference/app.html(승인된 초안)의 색을 그대로 옮겼다. 색은 여기서만 정한다. */
+:root {
+  /* 기본 */
+  --bg: #EEF0F3;
+  --surface: #FFFFFF;
+  --ink: #1E2430;
+  --sub: #5B6474;
+  --faint: #8A93A3;
+  --line: #E3E6EC;
+  --line2: #CDD3DC;
+  --accent: #3346A8;
+  --accent-ink: #2A3A8C;
+  --accent-soft: #ECEFFB;
+  --on-accent: #FFFFFF;
+
+  /* 옅은 바탕 (초안에서 흩어져 있던 회색들) */
+  --tint: #F1F3F6;        /* 보기 메뉴 바탕, 탭 숫자, 보조 아이콘 */
+  --hover: #F8F9FB;       /* 행·버튼 hover */
+  --soft: #F7F8FA;        /* 원문 인용, 썸네일 바탕, 시트 탭 */
+  --soft2: #FAFBFC;       /* 표 머리, 끌어다 놓기 영역 */
+  --code-bg: #F2F4F7;
+  --app-thumb: #F3F4F8;   /* "앱 전체" 썸네일 */
+
+  /* 판정 */
+  --ok: #2E7D4F;    --ok-bg: #E6F2EA;    --ok-line: #BFDCC9;
+  --diff: #A86B12;  --diff-bg: #FBF0DC;
+  --miss: #B42318;  --miss-bg: #FBE8E6;
+  --check: #6B5BB5; --check-bg: #EEEBF9;
+  --part: #2B6E7E;  --part-bg: #E2F0F3;   /* 부분구현 (기획서 항목 집계) */
+  --none: #A9B0BC;  --none-bg: #F1F3F6;   /* 판정 전 (③ 결과 없음), 반려 */
+
+  /* 형광펜 (기획서 그림 위에 multiply로 겹침) */
+  --hl-ok: rgba(46, 125, 79, .16);
+  --hl-diff: rgba(214, 150, 40, .32);
+  --hl-miss: rgba(180, 35, 24, .22);
+  --hl-check: rgba(107, 91, 181, .22);
+  --hl-none: rgba(138, 147, 163, .22);
+
+  /* 표시 */
+  --origin-ink: #8A5A00;  --origin-bg: #FFF3D6;   /* "함의" 표시 */
+  --note-bg: #FFF8E6;     --note-line: #F1DFA8;
+  --trans-bg: #F3F6FB;
+  --cli-bg: #1E2430;      --cli-ink: #E6E9EF;     --cli-sub: #8A93A6;
+  --file-pdf: #C2412D;    --file-zip: #4B5563;
+
+  /* 그림자 */
+  --shadow-tab: 0 1px 2px rgba(20, 25, 40, .12);
+  --shadow-card: 0 4px 14px rgba(20, 25, 40, .08);
+  --shadow-choice: 0 4px 16px rgba(51, 70, 168, .12);
+  --shadow-page: 0 2px 10px rgba(20, 25, 40, .08);
+  --shadow-dialog: 0 20px 60px rgba(20, 25, 40, .25);
+  --backdrop: rgba(20, 25, 40, .4);
+  --badge-bg: rgba(30, 36, 48, .82);
+
+  /* 글꼴 */
+  --font: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mono: D2Coding, Consolas, monospace;
+}

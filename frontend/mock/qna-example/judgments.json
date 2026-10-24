@@ -1,0 +1,785 @@
+{
+  "results": {
+    "REQ-APP-01": {
+      "unit_id": "REQ-APP-01",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/config/SecurityConfig.java",
+          "line": 17,
+          "code": ".anyRequest().permitAll())"
+        }
+      ],
+      "note": "/qna/{id}(문의 상세)는 로그인 확인 없이 열림",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-003"
+    },
+    "REQ-APP-02": {
+      "unit_id": "REQ-APP-02",
+      "status": "확인필요",
+      "mismatch": [],
+      "evidence": [],
+      "note": "가입 저장(MemberService.join)과 로그인(Spring Security)은 있으나 비밀번호 암호화 설정이 묶음에 없어 가입한 계정으로 로그인되는지 코드만으로 확인할 수 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-001-01": {
+      "unit_id": "REQ-MEM-001-01",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/member/login.html",
+          "line": 13,
+          "code": "<button type=\"submit\" id=\"loginBtn\">로그인</button>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-001-02": {
+      "unit_id": "REQ-MEM-001-02",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/config/SecurityConfig.java",
+          "line": 20,
+          "code": ".usernameParameter(\"email\")"
+        }
+      ],
+      "note": "로그인 성공 뒤 /qna로 이동 (설계서에는 이동 화면 없음)",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-001-03": {
+      "unit_id": "REQ-MEM-001-03",
+      "status": "확인필요",
+      "mismatch": [
+        {
+          "field": "message",
+          "spec": "이메일 또는 비밀번호가 올바르지 않습니다.",
+          "code": "이메일 또는 비밀번호를 확인해주세요."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/member/login.html",
+          "line": 14,
+          "code": "<p class=\"error\" th:if=\"${param.error}\">이메일 또는 비밀번호를 확인해주세요.</p>"
+        }
+      ],
+      "note": "[근거 불일치로 확인필요 처리]",
+      "split_issue": null,
+      "evidence_ok": false,
+      "evidence_problems": [
+        "src/main/resources/templates/member/login.html:14: 인용한 코드가 실제 줄과 다름"
+      ],
+      "original_status": "불일치",
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-001-04": {
+      "unit_id": "REQ-MEM-001-04",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/member/login.html",
+          "line": 15,
+          "code": "<a href=\"/signup\">회원가입</a>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-001-05": {
+      "unit_id": "REQ-MEM-001-05",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/member/login.html",
+          "line": 10,
+          "code": "<input type=\"email\" id=\"email\" name=\"email\" placeholder=\"이메일\">"
+        }
+      ],
+      "note": "login.html의 이메일 입력란에 이전 입력값을 채우는 코드가 없음. MemberController, SecurityConfig의 failureUrl도 확인함",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-001"
+    },
+    "REQ-MEM-002-01": {
+      "unit_id": "REQ-MEM-002-01",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/member/signup.html",
+          "line": 15,
+          "code": "<button type=\"submit\" id=\"joinBtn\">가입하기</button>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-002"
+    },
+    "REQ-MEM-002-02": {
+      "unit_id": "REQ-MEM-002-02",
+      "status": "불일치",
+      "mismatch": [
+        {
+          "field": "message",
+          "spec": "이메일 형식이 올바르지 않습니다.",
+          "code": "올바른 이메일 형식이 아닙니다."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/member.js",
+          "line": 11,
+          "code": "if (!/^[^@\\s]+@[^@\\s]+$/.test(email.value)) showError(email, \"올바른 이메일 형식이 아닙니다.\");"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-002"
+    },
+    "REQ-MEM-002-03": {
+      "unit_id": "REQ-MEM-002-03",
+      "status": "구현",
+      "mismatch": [
+        {
+          "field": "message",
+          "spec": "비밀번호는 8자 이상 입력해주세요.",
+          "code": "비밀번호는 8자 이상 입력해 주세요."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/member.js",
+          "line": 15,
+          "code": "if (password.value.length < 8) showError(password, \"비밀번호는 8자 이상 입력해 주세요.\");"
+        }
+      ],
+      "note": "띄어쓰기 차이 [문구가 띄어쓰기만 달라 구현으로 처리]",
+      "split_issue": null,
+      "evidence_ok": true,
+      "original_status": "불일치",
+      "screen_id": "MEM-002"
+    },
+    "REQ-MEM-002-04": {
+      "unit_id": "REQ-MEM-002-04",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/MemberController.java",
+          "line": 30,
+          "code": "memberService.join(form);"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-002"
+    },
+    "REQ-MEM-002-05": {
+      "unit_id": "REQ-MEM-002-05",
+      "status": "불일치",
+      "mismatch": [
+        {
+          "field": "target",
+          "spec": "MEM-001",
+          "code": "/"
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/MemberController.java",
+          "line": 31,
+          "code": "return \"redirect:/\";"
+        }
+      ],
+      "note": "가입 후 로그인 화면이 아니라 첫 화면(/)으로 이동함",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "MEM-002"
+    },
+    "REQ-APP-03": {
+      "unit_id": "REQ-APP-03",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 22,
+          "code": "model.addAttribute(\"items\", qnaService.visibleTo(principal.getName()));"
+        }
+      ],
+      "note": "목록을 열 때마다 저장된 제목을 다시 읽음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-001"
+    },
+    "REQ-QNA-001-01": {
+      "unit_id": "REQ-QNA-001-01",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 22,
+          "code": "model.addAttribute(\"items\", qnaService.visibleTo(principal.getName()));"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-001"
+    },
+    "REQ-QNA-001-02": {
+      "unit_id": "REQ-QNA-001-02",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/list.html",
+          "line": 8,
+          "code": "<tr th:each=\"q : ${items}\">"
+        }
+      ],
+      "note": "목록 행에 삭제 버튼이 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-001"
+    },
+    "REQ-QNA-001-03": {
+      "unit_id": "REQ-QNA-001-03",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/list.html",
+          "line": 6,
+          "code": "<a href=\"/qna/new\" class=\"btn\">문의하기</a>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-001"
+    },
+    "REQ-QNA-002-01": {
+      "unit_id": "REQ-QNA-002-01",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/write.html",
+          "line": 7,
+          "code": "<select id=\"type\" name=\"type\">"
+        }
+      ],
+      "note": "write.html에 문의 유형, 제목, 내용 입력란은 있고 비공개 체크박스는 없음",
+      "split_issue": "입력란 세 개 표시는 구현, 비공개 체크박스 표시는 미구현",
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-02": {
+      "unit_id": "REQ-QNA-002-02",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/write.html",
+          "line": 12,
+          "code": "<input type=\"text\" id=\"title\" name=\"title\" maxlength=\"30\" placeholder=\"제목\">"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-03": {
+      "unit_id": "REQ-QNA-002-03",
+      "status": "불일치",
+      "mismatch": [
+        {
+          "field": "message",
+          "spec": "제목을 입력해주세요.",
+          "code": "제목을 입력하세요"
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/qna.js",
+          "line": 11,
+          "code": "if (!title.value.trim()) showError(title, \"제목을 입력하세요\");"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-04": {
+      "unit_id": "REQ-QNA-002-04",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/qna.js",
+          "line": 15,
+          "code": "if (content.value.length < 10) showError(content, \"내용을 10자 이상 입력해주세요.\");"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-05": {
+      "unit_id": "REQ-QNA-002-05",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/qna.js",
+          "line": 15,
+          "code": "if (content.value.length < 10) showError(content, \"내용을 10자 이상 입력해주세요.\");"
+        }
+      ],
+      "note": "브라우저 안에서만 검사하고 서버 요청 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-06": {
+      "unit_id": "REQ-QNA-002-06",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/js/qna.js",
+          "line": 15,
+          "code": "if (content.value.length < 10) showError(content, \"내용을 10자 이상 입력해주세요.\");"
+        }
+      ],
+      "note": "금지어 검사 코드 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-07": {
+      "unit_id": "REQ-QNA-002-07",
+      "status": "확인필요",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/write.html",
+          "line": 16,
+          "code": "<button type=\"submit\" id=\"submitBtn\">등록</button>"
+        }
+      ],
+      "note": "등록 버튼에 활성화·비활성화 처리가 없고 브라우저 기본 동작만 있음. 처음부터 눌리는지 화면에서 확인 필요",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-08": {
+      "unit_id": "REQ-QNA-002-08",
+      "status": "불일치",
+      "mismatch": [
+        {
+          "field": "values",
+          "spec": [
+            "파란색 테두리"
+          ],
+          "code": [
+            "회색 배경"
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "file": "src/main/resources/static/css/qna.css",
+          "line": 3,
+          "code": "select.selected { background: #eee; }"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-09": {
+      "unit_id": "REQ-QNA-002-09",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 33,
+          "code": "qnaService.create(form, principal.getName());"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-10": {
+      "unit_id": "REQ-QNA-002-10",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [],
+      "note": "QnaController.create는 목록으로 이동만 함. qna.js와 write.html에 완료 팝업 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-11": {
+      "unit_id": "REQ-QNA-002-11",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 34,
+          "code": "return \"redirect:/qna\";"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-12": {
+      "unit_id": "REQ-QNA-002-12",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 39,
+          "code": "model.addAttribute(\"qna\", qnaService.get(id));"
+        }
+      ],
+      "note": "상세 조회에 작성자·비공개 확인이 없음. 비공개 체크박스도 작성 화면에 없음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-002-13": {
+      "unit_id": "REQ-QNA-002-13",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/java/demo/controller/QnaController.java",
+          "line": 34,
+          "code": "return \"redirect:/qna\";"
+        }
+      ],
+      "note": "등록 후 목록으로 이동하고 목록은 본인 문의를 다시 읽음",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-002"
+    },
+    "REQ-QNA-003-01": {
+      "unit_id": "REQ-QNA-003-01",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/detail.html",
+          "line": 6,
+          "code": "<h1 th:text=\"${qna.title}\">제목</h1>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-003"
+    },
+    "REQ-QNA-003-02": {
+      "unit_id": "REQ-QNA-003-02",
+      "status": "미구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/answer-button.html",
+          "line": 1,
+          "code": "th:if=\"${isAgent}\""
+        }
+      ],
+      "note": "답변하기 버튼이 역할과 상관없이 보임",
+      "split_issue": null,
+      "evidence_ok": false,
+      "evidence_problems": [
+        "src/main/resources/templates/qna/answer-button.html: 없는 파일"
+      ],
+      "screen_id": "QNA-003"
+    },
+    "REQ-QNA-003-03": {
+      "unit_id": "REQ-QNA-003-03",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/detail.html",
+          "line": 10,
+          "code": "<a th:href=\"@{/qna/{id}/answer(id=${qna.id})}\" class=\"btn\">답변하기</a>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-003"
+    },
+    "REQ-QNA-003-04": {
+      "unit_id": "REQ-QNA-003-04",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/detail.html",
+          "line": 11,
+          "code": "<a th:href=\"@{/qna/{id}/edit(id=${qna.id})}\" class=\"btn\">수정하기</a>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-003"
+    },
+    "REQ-QNA-006-01": {
+      "unit_id": "REQ-QNA-006-01",
+      "status": "확인필요",
+      "mismatch": [],
+      "evidence": [],
+      "note": "판정 누락 (LLM이 결과를 내지 않음)",
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-006"
+    },
+    "REQ-QNA-006-02": {
+      "unit_id": "REQ-QNA-006-02",
+      "status": "구현",
+      "mismatch": [],
+      "evidence": [
+        {
+          "file": "src/main/resources/templates/qna/delete.html",
+          "line": 7,
+          "code": "<button type=\"button\" onclick=\"document.getElementById('deletePopup').hidden = true\">아니오</button>"
+        }
+      ],
+      "note": null,
+      "split_issue": null,
+      "evidence_ok": true,
+      "screen_id": "QNA-006"
+    }
+  },
+  "items": {
+    "MEM-001 Description 0": {
+      "status": "부분구현",
+      "units": [
+        "REQ-APP-01",
+        "REQ-MEM-001-01"
+      ]
+    },
+    "QNA-001 화면 이미지": {
+      "status": "미구현",
+      "units": [
+        "REQ-APP-01"
+      ]
+    },
+    "MEM-001 Description 2": {
+      "status": "부분구현",
+      "units": [
+        "REQ-APP-02",
+        "REQ-MEM-001-02"
+      ]
+    },
+    "MEM-002 Action A": {
+      "status": "부분구현",
+      "units": [
+        "REQ-APP-02",
+        "REQ-MEM-002-04",
+        "REQ-MEM-002-05"
+      ]
+    },
+    "MEM-001 Action E": {
+      "status": "확인필요",
+      "units": [
+        "REQ-MEM-001-03"
+      ]
+    },
+    "MEM-001 Action F": {
+      "status": "구현",
+      "units": [
+        "REQ-MEM-001-04"
+      ]
+    },
+    "MEM-001 상태 화면 p.2": {
+      "status": "미구현",
+      "units": [
+        "REQ-MEM-001-05"
+      ]
+    },
+    "MEM-002 Description 0": {
+      "status": "구현",
+      "units": [
+        "REQ-MEM-002-01"
+      ]
+    },
+    "MEM-002 Description 1": {
+      "status": "불일치",
+      "units": [
+        "REQ-MEM-002-02"
+      ]
+    },
+    "MEM-002 Description 2": {
+      "status": "구현",
+      "units": [
+        "REQ-MEM-002-03"
+      ]
+    },
+    "QNA-005 Action A": {
+      "status": "구현",
+      "units": [
+        "REQ-APP-03"
+      ]
+    },
+    "QNA-001 Description 2": {
+      "status": "구현",
+      "units": [
+        "REQ-APP-03",
+        "REQ-QNA-001-01"
+      ]
+    },
+    "QNA-001 Description 4": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-001-02"
+      ]
+    },
+    "QNA-001 Action C": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-001-03"
+      ]
+    },
+    "QNA-002 Description 0": {
+      "status": "미구현",
+      "units": [
+        "REQ-QNA-002-01"
+      ]
+    },
+    "QNA-002 Description 1": {
+      "status": "부분구현",
+      "units": [
+        "REQ-QNA-002-02",
+        "REQ-QNA-002-03"
+      ]
+    },
+    "QNA-002 Description 2": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-002-04",
+        "REQ-QNA-002-05",
+        "REQ-QNA-002-06"
+      ]
+    },
+    "QNA-002 Description 3": {
+      "status": "확인필요",
+      "units": [
+        "REQ-QNA-002-07"
+      ]
+    },
+    "QNA-002 Description 4": {
+      "status": "불일치",
+      "units": [
+        "REQ-QNA-002-08"
+      ]
+    },
+    "QNA-002 Action A": {
+      "status": "부분구현",
+      "units": [
+        "REQ-QNA-002-09",
+        "REQ-QNA-002-10",
+        "REQ-QNA-002-11",
+        "REQ-QNA-002-13"
+      ]
+    },
+    "QNA-002 Action B": {
+      "status": "미구현",
+      "units": [
+        "REQ-QNA-002-12"
+      ]
+    },
+    "QNA-003 Description 1": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-003-01"
+      ]
+    },
+    "QNA-003 Description 3": {
+      "status": "미구현",
+      "units": [
+        "REQ-QNA-003-02"
+      ]
+    },
+    "QNA-003 Action C": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-003-03"
+      ]
+    },
+    "QNA-003 Action D": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-003-04"
+      ]
+    },
+    "QNA-006 Action A": {
+      "status": "확인필요",
+      "units": [
+        "REQ-QNA-006-01"
+      ]
+    },
+    "QNA-006 Action B": {
+      "status": "구현",
+      "units": [
+        "REQ-QNA-006-02"
+      ]
+    }
+  },
+  "extras": [
+    {
+      "file": "src/main/resources/templates/qna/list.html",
+      "line": 5,
+      "code": "<header th:replace=\"~{fragments/header :: header}\"></header>",
+      "description": "목록 위에 공통 머리글 조각을 넣음 (설계서에 머리글 설명 없음)",
+      "screen_id": "QNA-001"
+    },
+    {
+      "file": "src/main/resources/static/js/qna.js",
+      "line": 23,
+      "code": "setInterval(saveDraft, 30000);",
+      "description": "작성 중인 내용을 30초마다 임시 저장 (설계서에 없음)",
+      "screen_id": "QNA-002"
+    }
+  ]
+}

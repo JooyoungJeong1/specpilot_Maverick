@@ -1,0 +1,48 @@
+{
+  "summary": {
+    "units_judged": 35,
+    "units_not_judged": 8,
+    "by_status": {
+      "미구현": 6,
+      "확인필요": 4,
+      "구현": 21,
+      "불일치": 4
+    },
+    "items_by_status": {
+      "부분구현": 5,
+      "미구현": 5,
+      "확인필요": 3,
+      "구현": 12,
+      "불일치": 2
+    },
+    "evidence_failures": 2,
+    "spacing_only": 1,
+    "split_issues": 1,
+    "merge_candidates": 1,
+    "extras": 2
+  },
+  "screen_status": {
+    "MEM-001": "완료",
+    "MEM-002": "완료",
+    "QNA-001": "완료",
+    "QNA-002": "완료",
+    "QNA-003": "완료",
+    "QNA-005": "실패",
+    "QNA-006": "완료"
+  },
+  "split_issues": [
+    {
+      "unit_id": "REQ-QNA-002-01",
+      "split_issue": "입력란 세 개 표시는 구현, 비공개 체크박스 표시는 미구현"
+    }
+  ],
+  "merge_candidates": [
+    {
+      "units": [
+        "REQ-QNA-002-04",
+        "REQ-QNA-002-06"
+      ],
+      "reason": "행동·판정·근거 코드 줄이 모두 같음"
+    }
+  ]
+}

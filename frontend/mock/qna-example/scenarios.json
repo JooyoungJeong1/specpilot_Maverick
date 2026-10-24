@@ -1,0 +1,220 @@
+{
+  "scenarios": [
+    {
+      "scenario_id": "TC-MEM-001-01",
+      "depth1": "회원",
+      "depth2": "로그인",
+      "steps": [
+        {
+          "no": 1,
+          "action": "로그인 화면에 들어간다.",
+          "expected": "이메일, 비밀번호 입력란과 로그인 버튼이 표시된다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-MEM-001-01"
+          ],
+          "setup": null
+        },
+        {
+          "no": 2,
+          "action": "가입된 이메일과 틀린 비밀번호로 로그인한다.",
+          "expected": "\"이메일 또는 비밀번호가 올바르지 않습니다.\"가 표시되고 입력한 이메일은 남아 있다.",
+          "account": "user1@example.com",
+          "input": "비밀번호: wrong-pass",
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-MEM-001-03",
+            "REQ-MEM-001-05"
+          ],
+          "setup": null
+        },
+        {
+          "no": 3,
+          "action": "가입된 이메일과 비밀번호로 로그인한다.",
+          "expected": "로그인된다.",
+          "account": "user1@example.com",
+          "input": null,
+          "data_source": null,
+          "note": "로그인 후 이동 화면은 질문 Q-APP-02 답변에 따름",
+          "unit_ids": [
+            "REQ-MEM-001-02",
+            "REQ-APP-02"
+          ],
+          "setup": null
+        },
+        {
+          "no": 4,
+          "action": "회원가입 링크를 누른다.",
+          "expected": "회원가입 화면으로 이동한다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-MEM-001-04"
+          ],
+          "setup": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "TC-QNA-002-01",
+      "depth1": "고객센터",
+      "depth2": "문의 작성",
+      "steps": [
+        {
+          "no": 1,
+          "action": "문의 작성 화면에 들어간다.",
+          "expected": "문의 유형, 제목, 내용 입력란과 비공개 체크박스가 표시된다.",
+          "account": "user1@example.com",
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-01"
+          ],
+          "setup": "user1@example.com으로 로그인"
+        },
+        {
+          "no": 2,
+          "action": "제목을 비운 채 다른 입력란을 누른다.",
+          "expected": "\"제목을 입력해주세요.\"가 표시된다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-03"
+          ],
+          "setup": null
+        },
+        {
+          "no": 3,
+          "action": "내용에 5자를 입력하고 다른 곳을 누른다.",
+          "expected": "\"내용을 10자 이상 입력해주세요.\"가 표시된다.",
+          "account": null,
+          "input": "내용: 안녕하세요",
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-04",
+            "REQ-QNA-002-05"
+          ],
+          "setup": null
+        },
+        {
+          "no": 4,
+          "action": "문의 유형, 제목, 내용을 모두 채운다.",
+          "expected": "등록 버튼이 활성화된다.",
+          "account": null,
+          "input": "유형: 계정 / 제목: 로그인 문의 / 내용: 로그인이 되지 않습니다. 확인 부탁드립니다.",
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-07"
+          ],
+          "setup": null
+        },
+        {
+          "no": 5,
+          "action": "등록 버튼을 누른다.",
+          "expected": "\"문의가 등록되었습니다.\" 팝업이 표시된 뒤 문의 목록으로 이동한다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-09",
+            "REQ-QNA-002-10",
+            "REQ-QNA-002-11"
+          ],
+          "setup": null
+        },
+        {
+          "no": 6,
+          "action": "문의 목록을 본다.",
+          "expected": "방금 등록한 문의가 목록에 표시된다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-13"
+          ],
+          "setup": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "TC-QNA-002-02",
+      "depth1": "고객센터",
+      "depth2": "문의 작성",
+      "steps": [
+        {
+          "no": 1,
+          "action": "비공개를 체크하고 문의를 등록한다.",
+          "expected": "문의가 등록된다.",
+          "account": "user1@example.com",
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-12"
+          ],
+          "setup": "user1@example.com으로 로그인"
+        },
+        {
+          "no": 2,
+          "action": "다른 계정으로 로그인해 그 문의를 연다.",
+          "expected": "문의 내용을 볼 수 없다.",
+          "account": "user2@example.com",
+          "input": null,
+          "data_source": "1단계에서 등록한 문의",
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-002-12"
+          ],
+          "setup": null
+        }
+      ]
+    },
+    {
+      "scenario_id": "TC-QNA-005-01",
+      "depth1": "고객센터",
+      "depth2": "문의 수정",
+      "steps": [
+        {
+          "no": 1,
+          "action": "제목을 바꾸고 저장 버튼을 누른다.",
+          "expected": "수정한 내용이 저장되고 문의 상세 화면으로 이동한다.",
+          "account": "user1@example.com",
+          "input": "제목: 로그인 문의(수정)",
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-QNA-005-05",
+            "REQ-QNA-005-06"
+          ],
+          "setup": "user1@example.com으로 로그인해 본인 문의의 수정 화면을 연다"
+        },
+        {
+          "no": 2,
+          "action": "문의 목록을 본다.",
+          "expected": "바뀐 제목이 목록에 표시된다.",
+          "account": null,
+          "input": null,
+          "data_source": null,
+          "note": null,
+          "unit_ids": [
+            "REQ-APP-03"
+          ],
+          "setup": null
+        }
+      ]
+    }
+  ]
+}

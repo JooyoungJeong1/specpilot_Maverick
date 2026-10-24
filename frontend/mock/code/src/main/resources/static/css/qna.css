@@ -1,0 +1,3 @@
+/* 가상 문의 앱 (mock). 실제 코드가 아니다. */
+select { border: 1px solid #ccc; }
+select.selected { background: #eee; }

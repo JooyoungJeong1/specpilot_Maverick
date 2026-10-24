@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- 가상 문의 앱 (mock). 실제 코드가 아니다. -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>회원가입</title>
+  <script src="/js/member.js" defer></script>
+</head>
+<body>
+<form id="signupForm" method="post" action="/signup">
+  <input type="email" id="email" name="email" placeholder="이메일">
+  <p class="error" id="emailError"></p>
+  <input type="password" id="password" name="password" placeholder="비밀번호">
+  <p class="error" id="passwordError"></p>
+  <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호 확인">
+  <button type="submit" id="joinBtn">가입하기</button>
+</form>
+</body>
+</html>

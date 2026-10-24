@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!-- 가상 문의 앱 (mock). 실제 코드가 아니다. -->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<a href="/qna/new" class="btn">문의하기</a>
+<table>
+  <tr th:each="q : ${items}">
+    <td><a th:href="@{/qna/{id}(id=${q.id})}" th:text="${q.title}">제목</a></td>
+    <td th:text="${q.createdAt}">작성일</td>
+  </tr>
+</table>
+</body>
+</html>
