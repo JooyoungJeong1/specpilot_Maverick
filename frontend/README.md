@@ -24,6 +24,21 @@ frontend/local/code/<샘플코드>/   ← "코드 앞뒤 보기"용 (선택)
 - `local/runs/`가 비어 있으면 가짜 예시 데이터(`mock/`)가 보인다. 예시 데이터로 기획서 페이지까지 보려면 `python mock/make_mock_pdf.py`로 예시 PDF를 만든다 (Chrome·Edge 필요).
 - `local/`은 기업 자료라 git에 올라가지 않는다. 커밋 전에 `git status`로 한 번 더 확인한다.
 
+## 실제 결과로 확인하기 (조장 노트북)
+
+백엔드로 돌려 둔 결과가 있는 PC에서 그대로 확인하는 순서다. 시연 리허설도 이 순서로 한다.
+
+1. 프론트 받기: `git fetch` → `git checkout front/setup` (main에 합쳐진 뒤에는 `git pull`)
+2. `frontend` 폴더에서 `npm ci` → `npm run dev`
+3. 돌려 둔 결과 폴더 `backend/output/<실행ID>/`를 `frontend/local/runs/` 안에 통째로 복사한다
+   - `score_report.json`, `score_review.md`는 화면이 읽지 않는다. 같이 복사돼도 괜찮다
+4. 터미널에 찍힌 주소로 들어가 확인한다
+   - 시작 화면 "최근 분석"에서 그 실행 열기
+   - 요약 → 화면 카드 → 화면별 보기: 기획서 페이지의 원문 자리에 판정 색 형광펜이 맞게 칠해지는지
+   - 요구사항 표, 코드 보기, 상단 "내보내기"(엑셀)
+
+이상한 곳이 있으면 **어느 화면인지와 캡처**를 프론트 담당에게 보낸다. 아래 "아직 없는 것"은 문제가 아니다.
+
 ## 화면
 
 | 주소 | 화면 |
