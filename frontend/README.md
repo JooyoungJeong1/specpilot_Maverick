@@ -19,7 +19,9 @@ frontend/local/runs/<실행ID>/     ← 조장의 backend/output/<실행ID>/ 폴
 frontend/local/code/<샘플코드>/   ← "코드 앞뒤 보기"용 (선택)
 ```
 
-- `local/runs/`가 비어 있으면 가짜 예시 데이터(`mock/`)가 보인다.
+- 폴더 이름은 실행 ID 그대로 둔다. 한글·공백이 들어가면 목록에 나오지 않는다.
+- 조장 노트북에서는 원래 코드 위치(`judge/run.json`의 `code_root`)를 그대로 찾으므로 `local/code/`에 넣지 않아도 된다.
+- `local/runs/`가 비어 있으면 가짜 예시 데이터(`mock/`)가 보인다. 예시 데이터로 기획서 페이지까지 보려면 `python mock/make_mock_pdf.py`로 예시 PDF를 만든다 (Chrome·Edge 필요).
 - `local/`은 기업 자료라 git에 올라가지 않는다. 커밋 전에 `git status`로 한 번 더 확인한다.
 
 ## 화면
@@ -37,5 +39,6 @@ frontend/local/code/<샘플코드>/   ← "코드 앞뒤 보기"용 (선택)
 
 ## 아직 없는 것
 
-- **업로드 → 실제 분석**: 지금은 흉내다. 백엔드를 실행할 로컬 서버가 생기면 `src/api/api.ts`만 바꾼다.
+- **업로드 → 실제 분석**: 지금은 흉내다. 업로드해도 파일을 보내지 않고, 가장 최근 결과를 단계별로 보여 줄 뿐이다.
+  - 백엔드를 실행할 로컬 서버가 생기면 `src/api/api.ts`만 바꾼다. 서버가 맞춰야 할 주소와 형식은 `src/api/api.ts` 주석과 `src/types/progress.ts`에 있다.
 - **테스트 사양서(④)**: 백엔드에 아직 없어서 실제 결과에서는 비어 있다.
