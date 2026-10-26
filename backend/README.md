@@ -3,6 +3,7 @@
 기획서 PDF를 넣으면 요구사항 단위 목록(`requirements.json`)이 나오고, 소스 코드를 함께 주면 단위마다 정합성 판정(`judgments.json`)이 나온다.
 ④ 시나리오 합성은 같은 단위 목록으로 테스트 사양서(`테스트사양서.xlsx`, 기업 샘플 양식)를 만든다. ③의 판정 결과와 코드는 쓰지 않는다.
 요구사항 → ③ 판정 → ④ 시험 단계를 한 줄로 잇는 추적표(`추적표.xlsx`)는 사양서와 따로 나온다.
+웹 화면(`frontend/`)에서 기획서와 코드를 올려 ①~④를 한 번에 돌리려면 시연 서버(`serve`)를 켠다 → [웹으로 시연](#웹으로-시연-specpilotserverpy).
 
 **자세한 구조 설명, 테스트 순서, 평가지표는 [`docs/GUIDE.md`](docs/GUIDE.md)를 본다.**
 프롬프트는 v3.1을 반영했고, v3.1과 다른 곳은 [`docs/PROMPT_CHANGES.md`](docs/PROMPT_CHANGES.md)에 있다.
@@ -30,9 +31,9 @@
    `.env`에 `ANTHROPIC_API_KEY=본인 키`를 채운다. 키는 **사람마다 따로 발급**하고, 공유하거나 커밋하지 않는다.
 5. 설치 확인 (API 키 필요 없음)
    ```bash
-   python -m pytest -q         # 66 passed 이면 정상
+   python -m pytest -q         # 73 passed 이면 정상
    ```
-   `58 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
+   `65 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
 
 poppler 없이도 돌아가지만, 입력 점검의 그림 마커 대조와 quote 원문 대조가 경고로만 남아서 결과가 사람마다 달라질 수 있다. 같이 돌려볼 때는 모두 설치하는 것을 권장한다.
 
@@ -84,6 +85,9 @@ python -m specpilot scenario --run output/20261005-2030
 python -m specpilot scenario --run output/20261005-2030 --screens LOGIN-001   # 그 화면이 든 묶음만 (APP도 됨)
 python -m specpilot scenario --run output/20261005-2030 --excel-only          # 지난 결과로 엑셀만 다시 (무료)
 
+# 웹으로 시연: 웹에서 올린 기획서·코드로 run → judge → scenario를 차례로 돌리는 서버 (아래 "웹으로 시연")
+python -m specpilot serve
+
 # 결과가 틀렸을 때 거꾸로 따라가기: 기획서 원문 → ② 단위 → ③ 판정·근거 코드 → 원인 질문
 python -m specpilot trace --run output/20261005-2030 --unit REQ-LOGIN-001-07
 python -m specpilot trace --run output/20261005-2030 --item "LOGIN-001 Description 3"
@@ -96,7 +100,7 @@ python -m specpilot score --run output/20261005-2030 --key ../private/answer_key
 python -m specpilot merge --run output/20261005-2030
 python -m specpilot validate --screen-file screens/NOTICE-001.json --screen-id NOTICE-001
 
-# 테스트 (API 키 필요 없음, 66개. pdftotext가 없으면 일부는 건너뜀)
+# 테스트 (API 키 필요 없음, 73개. pdftotext가 없으면 일부는 건너뜀)
 python -m pytest -q
 ```
 
@@ -130,6 +134,9 @@ output/<실행ID>/
   score_report.json         채점 원본: 요약 숫자, 항목별 정답·판정 (정답 포함, 공유 금지)
   score_review.md           전체 항목 비교표 + 틀린 항목의 정답 근거와 AI 판정·근거 코드 (정답 포함, 공유 금지)
   implied_review.md         함의 단위 O/X 검토지 (정답 없음, 프롬프트 담당과 공유 가능)
+  job.json, server.log      웹에서 올려 돌린 실행만: 프로젝트 이름·작업 상태, 단계별 출력
+
+output/_uploads/<실행ID>/   웹에서 올린 기획서 PDF(여러 개면 plan.pdf로 이어 붙임)와 코드 zip·압축 푼 코드
 ```
 
 ## 기획서에 문제가 있을 때
@@ -164,6 +171,26 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 3. **검사**: 형식, 묶음에 없는 단위 ID(재시도). 어느 단계에도 들어가지 않은 단위가 있으면 **그 단위만 다시 요청**하고, 그래도 없으면 `uncovered`로 남긴다.
 4. **마무리**: 시나리오 ID(`TC-<묶음>-NN`), 단계 번호, DEPTH(1)(기획서 Depth)·DEPTH(2)(화면 이름)는 프로그램이 붙인다. 함의 단위·issue가 있는 단위를 확인하는 단계에는 비고를 붙인다. 근거 단위 없는 단계, 문구가 예상결과에 없는 단계는 경고.
 5. **엑셀**: 기업 샘플 양식(정보 칸, 두 줄 머리글, 시험데이터 = 계정/입력값/비고, 확인결과 빈칸)에 근거 요구사항·데이터 출처 열을 더했다. 판정 결과는 넣지 않는다.
+
+## 웹으로 시연 (`specpilot/server.py`)
+
+웹에서 기획서 PDF와 소스 코드(zip 또는 저장소 주소)를 올리면 서버가 명령어와 똑같이 `run`(입력 점검 → ① → 게이트 → ②) → `judge`(③) → `scenario`(④)를 차례로 돌린다. 진행 화면은 실행 폴더에 단계마다 남는 파일로 상태를 보여 주고, 끝나면 그 실행의 결과 화면이 열린다.
+
+```bash
+# 터미널 1 (backend 폴더): 시연 서버. .env의 API 키를 쓴다
+python -m specpilot serve                 # http://127.0.0.1:8765, ② 동시 호출 2개
+python -m specpilot serve --workers 4     # ② 동시 호출 수
+python -m specpilot serve --code-facts    # ③ 전에 code_analysis(코드팀 정적 분석)를 돌려 --facts로 넣기
+
+# 터미널 2 (frontend 폴더): 웹. /api 요청을 시연 서버로 넘긴다
+npm run dev
+```
+
+- 실행 ID는 `demo-<날짜>-<시각>`이고 결과는 명령어로 돌린 것과 같은 `output/<실행ID>/`에 쌓인다. 웹의 "최근 분석"에는 `output/`의 실행이 바로 보인다 (명령어로 돌린 실행 포함).
+- **한 번에 하나만** 돌린다. 진행 중에 또 올리면 거절한다. 서버를 끄면 돌던 분석은 중단되고, 다시 켜면 실패로 표시된다.
+- 기획서를 반려하면(입력 점검·게이트) 진행 화면에 이유가 나오고 멈춘다. 단계가 실패하면 `output/<실행ID>/server.log`를 본다.
+- 걸리는 시간은 명령어로 돌릴 때와 같다 (기획서 화면 수에 따라 수십 분).
+- 서버 주소와 응답 형식은 프론트가 정한 것을 따른다 (`frontend/src/api/api.ts`, `frontend/src/types/progress.ts`).
 
 ## 프롬프트 수정 (프롬프트 담당)
 
@@ -201,4 +228,4 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 - 같은 규칙의 단위 묶음 표시, 제약 단위 모음
 - ④를 실제 API로는 아직 돌려 보지 않았다. 첫 실행은 `--screens LOGIN-001`처럼 한 묶음으로 먼저 확인한다.
 - ④ 시험데이터를 코드에서 가져오기 (지금은 더미만), 화면 이동을 따라 여러 화면을 한 시나리오로 묶기
-- 웹 API·업로드 화면
+- 시연 서버: 진행 중인 분석 취소, 여러 분석 동시 실행, 로그인 (로컬 시연용이라 넣지 않음)

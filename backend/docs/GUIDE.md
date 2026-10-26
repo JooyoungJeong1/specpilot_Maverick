@@ -33,6 +33,7 @@
 | `trace` | 단계를 거꾸로 | ③ 결과가 이상할 때 원인 단계를 찾을 때 |
 | `score` | ③ 채점 | 정답 세트와 비교해 점수를 낼 때 (조장용) |
 | `validate` | 검사만 | JSON 파일 하나가 형식에 맞는지 볼 때 |
+| `serve` | 웹에서 올린 기획서·코드로 `run` → `judge` → `scenario` | 웹 화면으로 시연할 때 (README "웹으로 시연") |
 
 입력 점검이나 게이트에서 **기획서 전체를 반려하면** 명령이 종료 코드 3으로 멈춘다. 점검 결과를 무시하고 돌리려면 `--force`를 붙인다.
 
@@ -74,7 +75,7 @@ requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)�
 specpilot-backend/
   prompts/          프롬프트 문장 (코드 아님. 프롬프트 담당이 고치는 곳)
   specpilot/        파이썬 코드
-  tests/            API 키 없이 돌아가는 테스트 66개
+  tests/            API 키 없이 돌아가는 테스트 73개
   docs/             이 문서, 프롬프트 변경 정리, 정답 세트 형식 예시
 ```
 
@@ -237,6 +238,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | `trace.py` | `trace` | 단위 하나(또는 기획서 항목 하나)를 **기획서 원문**(PDF에서 그 항목만 잘라 냄) → **② 단위** → **③ 판정과 근거 코드**(앞뒤 2줄 포함) → ④ 순서로 한 번에 보여 주고, 원인을 가리는 질문 5개를 붙인다 |
 | `score.py` | `score` | ③ 판정을 정답 세트와 **기획서 항목 단위**로 비교해 점수를 낸다. `score_review.md`(전체 비교표 + 틀린 항목의 정답 근거와 AI 판정·근거 코드, 조장 전용)와 `implied_review.md`(함의 단위 O/X 검토지, 공유 가능)도 만든다 |
 | `schema.py` | `validate` | JSON 파일 하나만 검사 |
+| `server.py` | `serve` | 웹 시연 서버. 올린 PDF(여러 개면 이어 붙임)·코드 zip을 `output/_uploads/<실행ID>/`에 두고 `run`·`judge`·`scenario`를 따로 프로세스로 차례로 부른다. 진행 상태는 실행 폴더의 meta 파일로 만들어 웹(`frontend/src/types/progress.ts` 모양)에 준다 |
 
 ---
 
@@ -273,7 +275,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 
 5. **설치 확인** (API 키 필요 없음)
    ```bash
-   python -m pytest -q        # 66 passed (pdftotext가 없으면 일부는 skipped)
+   python -m pytest -q        # 73 passed (pdftotext가 없으면 일부는 skipped)
    ```
 
 Windows에서는 `python3` 대신 `python`을 쓰고, 경로에 공백이나 한글이 있으면 따옴표로 감싼다.

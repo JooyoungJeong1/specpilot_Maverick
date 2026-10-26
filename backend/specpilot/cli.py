@@ -9,6 +9,7 @@
   python -m specpilot judge --run output/<실행ID> --code ../../specpilot-inputs/sample-code   ③ 정합성 판정
   python -m specpilot scenario --run output/<실행ID>          ④ 시나리오 합성 → 테스트사양서.xlsx
   python -m specpilot scenario --run output/<실행ID> --excel-only   엑셀만 다시 (API 호출 없음)
+  python -m specpilot serve                                   시연용 서버 (웹에서 기획서·코드를 올려 끝까지 실행)
   python -m specpilot trace --run output/<실행ID> --unit REQ-LOGIN-001-07   거꾸로 따라가기
   python -m specpilot score --run output/<실행ID> --key ../../specpilot-private/answer_key.json   ③ 채점 (조장용)
   python -m specpilot validate --screen-file a.json --screen-id NOTICE-001   JSON 파일 하나 검사
@@ -266,6 +267,13 @@ def cmd_scenario(args) -> int:
     return 0
 
 
+def cmd_serve(args) -> int:
+    from .server import ServeOptions, serve
+
+    settings = Settings()
+    return serve(args.host, args.port, ServeOptions(settings.output_dir, workers=args.workers, code_facts=args.code_facts))
+
+
 def cmd_trace(args) -> int:
     from .trace import trace
 
@@ -353,6 +361,13 @@ def main(argv: list[str] | None = None) -> int:
     sn.add_argument("--excel-only", action="store_true", help="LLM을 부르지 않고 지난 결과로 scenarios.json과 엑셀만 다시 만든다")
     sn.add_argument("--dry-run", action="store_true")
     sn.set_defaults(func=cmd_scenario)
+
+    sv = sub.add_parser("serve", help="시연용 로컬 서버 (웹에서 올린 기획서·코드로 run → judge → scenario를 끝까지 돌림)")
+    sv.add_argument("--host", default="127.0.0.1")
+    sv.add_argument("--port", type=int, default=8765, help="웹(frontend/vite.config.ts)이 /api를 넘기는 포트와 같아야 한다")
+    sv.add_argument("--workers", type=int, default=2, help="② 동시 호출 수")
+    sv.add_argument("--code-facts", action="store_true", help="③ 전에 code_analysis(자바 파서 등)를 돌려 --facts로 넣는다")
+    sv.set_defaults(func=cmd_serve)
 
     t = sub.add_parser("trace", help="단위 하나를 기획서 원문 → 단위 → 판정·근거 코드까지 거슬러 보기")
     t.add_argument("--run", required=True)
