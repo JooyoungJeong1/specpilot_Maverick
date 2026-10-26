@@ -1,7 +1,8 @@
-# SpecPilot 백엔드 — 입력 점검 → ① 앱 프로필 → 게이트 → ② 화면별 분해 → 합치기·검사 → ③ 정합성 판정
+# SpecPilot 백엔드 — 입력 점검 → ① 앱 프로필 → 게이트 → ② 화면별 분해 → 합치기·검사 → ③ 정합성 판정 / ④ 시나리오 합성
 
 기획서 PDF를 넣으면 요구사항 단위 목록(`requirements.json`)이 나오고, 소스 코드를 함께 주면 단위마다 정합성 판정(`judgments.json`)이 나온다.
-④ 시나리오 합성과 엑셀 출력은 아직 없다.
+④ 시나리오 합성은 같은 단위 목록으로 테스트 사양서(`테스트사양서.xlsx`, 기업 샘플 양식)를 만든다. ③의 판정 결과와 코드는 쓰지 않는다.
+요구사항 → ③ 판정 → ④ 시험 단계를 한 줄로 잇는 추적표(`추적표.xlsx`)는 사양서와 따로 나온다.
 
 **자세한 구조 설명, 테스트 순서, 평가지표는 [`docs/GUIDE.md`](docs/GUIDE.md)를 본다.**
 프롬프트는 v3.1을 반영했고, v3.1과 다른 곳은 [`docs/PROMPT_CHANGES.md`](docs/PROMPT_CHANGES.md)에 있다.
@@ -29,9 +30,9 @@
    `.env`에 `ANTHROPIC_API_KEY=본인 키`를 채운다. 키는 **사람마다 따로 발급**하고, 공유하거나 커밋하지 않는다.
 5. 설치 확인 (API 키 필요 없음)
    ```bash
-   python -m pytest -q         # 53 passed 이면 정상
+   python -m pytest -q         # 66 passed 이면 정상
    ```
-   `44 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
+   `58 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
 
 poppler 없이도 돌아가지만, 입력 점검의 그림 마커 대조와 quote 원문 대조가 경고로만 남아서 결과가 사람마다 달라질 수 있다. 같이 돌려볼 때는 모두 설치하는 것을 권장한다.
 
@@ -78,6 +79,11 @@ python -m specpilot judge --run output/20261005-2030 --code inputs/sample-code
 python -m specpilot judge --run output/20261005-2030 --code inputs/sample-code --mode screen   # 화면별 묶음 강제
 python -m specpilot judge --run output/20261005-2030 --code inputs/sample-code --facts code_facts.json   # 코드팀 정적 분석 결과를 같이 넣기 (형식: docs/code_facts.example.json)
 
+# ④ 시나리오 합성: 단위를 묶어 테스트 사양서를 만든다 (코드·판정 결과는 보지 않음)
+python -m specpilot scenario --run output/20261005-2030
+python -m specpilot scenario --run output/20261005-2030 --screens LOGIN-001   # 그 화면이 든 묶음만 (APP도 됨)
+python -m specpilot scenario --run output/20261005-2030 --excel-only          # 지난 결과로 엑셀만 다시 (무료)
+
 # 결과가 틀렸을 때 거꾸로 따라가기: 기획서 원문 → ② 단위 → ③ 판정·근거 코드 → 원인 질문
 python -m specpilot trace --run output/20261005-2030 --unit REQ-LOGIN-001-07
 python -m specpilot trace --run output/20261005-2030 --item "LOGIN-001 Description 3"
@@ -90,7 +96,7 @@ python -m specpilot score --run output/20261005-2030 --key ../private/answer_key
 python -m specpilot merge --run output/20261005-2030
 python -m specpilot validate --screen-file screens/NOTICE-001.json --screen-id NOTICE-001
 
-# 테스트 (API 키 필요 없음, 53개. pdftotext가 없으면 일부는 건너뜀)
+# 테스트 (API 키 필요 없음, 66개. pdftotext가 없으면 일부는 건너뜀)
 python -m pytest -q
 ```
 
@@ -116,6 +122,11 @@ output/<실행ID>/
   judge/LOGIN-001.json      ③ 판정 결과 (+ .meta.json)
   judgments.json            단위별 판정 + 기획서 항목별 집계(부분구현) + 기획서에 없는 구현
   judge_report.json         판정 개수, 근거 불일치, 띄어쓰기만 다른 문구, 쪼개기 신호
+  scenario/LOGIN-001.json   ④ 묶음별 시나리오 (+ .meta.json). 팝업은 여는 화면 묶음에, 앱 전체 단위는 APP.json
+  scenarios.json            ④ 시나리오 전체 (결과 화면의 사양서 탭이 읽음). 못 넣은 단위·제약이라 뺀 단위 목록
+  scenario_report.json      시나리오·단계 수, 단위 커버리지, 경고
+  테스트사양서.xlsx          기업 양식 사양서: 개정이력, 목차, 메뉴(Depth)별 시나리오 시트
+  추적표.xlsx               요구사항 단위 전체 → ③ 판정·근거 코드(돌렸으면) → ④ 시나리오·단계, 제약·빠진 단위 표시
   score_report.json         채점 원본: 요약 숫자, 항목별 정답·판정 (정답 포함, 공유 금지)
   score_review.md           전체 항목 비교표 + 틀린 항목의 정답 근거와 AI 판정·근거 코드 (정답 포함, 공유 금지)
   implied_review.md         함의 단위 O/X 검토지 (정답 없음, 프롬프트 담당과 공유 가능)
@@ -146,6 +157,14 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 | `split_issues` | **덜 쪼갬**: 한 단위 안에서 판정이 갈림 | ③이 판정하면서 `split_issue` 칸에 적음 |
 | `merge_candidates` | **너무 쪼갬**: 행동·판정·근거 코드 줄이 모두 같은 단위 쌍 | 프로그램이 계산 |
 
+## ④ 시나리오 합성 (`specpilot/scenario.py`, `excel.py`)
+
+1. **묶기**: 화면마다 한 묶음. 팝업은 그 팝업을 여는 화면(화면 이동 `flows`, 없으면 `repeats_from`)의 묶음에 넣고, 앱 전체 단위는 APP 묶음. kind "제약"은 화면에서 확인할 수 없어 사양서에 넣지 않는다.
+2. **합성 호출**: 묶음마다 단위(`then`·`exact` 등. `quote`·`ref_hint`는 빼고 보냄)와 앱 프로필 요약을 넣는다. 예상결과는 단위의 then·exact로만 쓰고, 계정·입력값은 더미로 만든다.
+3. **검사**: 형식, 묶음에 없는 단위 ID(재시도). 어느 단계에도 들어가지 않은 단위가 있으면 **그 단위만 다시 요청**하고, 그래도 없으면 `uncovered`로 남긴다.
+4. **마무리**: 시나리오 ID(`TC-<묶음>-NN`), 단계 번호, DEPTH(1)(기획서 Depth)·DEPTH(2)(화면 이름)는 프로그램이 붙인다. 함의 단위·issue가 있는 단위를 확인하는 단계에는 비고를 붙인다. 근거 단위 없는 단계, 문구가 예상결과에 없는 단계는 경고.
+5. **엑셀**: 기업 샘플 양식(정보 칸, 두 줄 머리글, 시험데이터 = 계정/입력값/비고, 확인결과 빈칸)에 근거 요구사항·데이터 출처 열을 더했다. 판정 결과는 넣지 않는다.
+
 ## 프롬프트 수정 (프롬프트 담당)
 
 프롬프트 문장은 전부 `prompts/`에 있고 코드는 `{{자리표시자}}`만 채운다. 프롬프트를 고칠 때 코드는 건드리지 않는다.
@@ -155,6 +174,7 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 | `app_profile.txt` | 프롬프트 ① |
 | `screen_decompose.txt` | 프롬프트 ② (예시 1·2의 입력 화면 글자 포함) |
 | `judge.txt`, `code_select.txt` | 프롬프트 ③ (판정, 화면별 코드 고르기) |
+| `scenario.txt` | 프롬프트 ④ (시나리오 합성). 예시는 `examples/scenario_example.json` |
 | `blocks/reading_guide.txt` · `implied_rule.txt` · `unit_schema.txt` | 공통 블록 (①②에 같이 들어감) |
 | `examples/*.json` | 출력 예시 (테스트의 정상 입력으로도 쓰임. 예시 quote가 예시 입력 글자에 그대로 있는지도 테스트함) |
 | `hints.txt` | ①이 앱 전체 질문을 만들 때 참고할 후보 (비워 둬도 됨. 정답 세트 내용은 넣지 않는다) |
@@ -179,5 +199,6 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 - v3.1 프롬프트를 실제 API로는 아직 돌려 보지 않았다. 첫 실행은 `--screens LOGIN-001`처럼 한두 화면으로 먼저 확인한다.
 - 재실행할 때 단위 ID 이어받기 (지금은 응답 순서대로 다시 붙임)
 - 같은 규칙의 단위 묶음 표시, 제약 단위 모음
-- ④ 시나리오 합성과 커버리지 검사, 엑셀 출력
+- ④를 실제 API로는 아직 돌려 보지 않았다. 첫 실행은 `--screens LOGIN-001`처럼 한 묶음으로 먼저 확인한다.
+- ④ 시험데이터를 코드에서 가져오기 (지금은 더미만), 화면 이동을 따라 여러 화면을 한 시나리오로 묶기
 - 웹 API·업로드 화면

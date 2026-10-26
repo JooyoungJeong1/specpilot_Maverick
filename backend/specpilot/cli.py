@@ -7,6 +7,8 @@
   python -m specpilot screen --run output/<실행ID> --screen MYPAGE-001 --pdf 고친기획서.pdf   기획서를 고친 뒤 그 화면만
   python -m specpilot merge --run output/<실행ID>           합치기·검사만 다시
   python -m specpilot judge --run output/<실행ID> --code ../../specpilot-inputs/sample-code   ③ 정합성 판정
+  python -m specpilot scenario --run output/<실행ID>          ④ 시나리오 합성 → 테스트사양서.xlsx
+  python -m specpilot scenario --run output/<실행ID> --excel-only   엑셀만 다시 (API 호출 없음)
   python -m specpilot trace --run output/<실행ID> --unit REQ-LOGIN-001-07   거꾸로 따라가기
   python -m specpilot score --run output/<실행ID> --key ../../specpilot-private/answer_key.json   ③ 채점 (조장용)
   python -m specpilot validate --screen-file a.json --screen-id NOTICE-001   JSON 파일 하나 검사
@@ -237,6 +239,33 @@ def cmd_judge(args) -> int:
     return 0
 
 
+def cmd_scenario(args) -> int:
+    from .scenario import merge_scenarios, run_scenario
+
+    settings = Settings()
+    run_dir = Path(args.run)
+    if not (run_dir / "requirements.json").exists():
+        print("requirements.json이 없습니다. run이나 merge를 먼저 하세요", file=sys.stderr)
+        return 2
+    if args.excel_only:
+        report = merge_scenarios(run_dir, project=args.project)
+    else:
+        ctx = RunContext(run_dir, run_dir / "input.pdf", settings, PromptSet(settings.prompts_dir),
+                         _make_llm(settings, args.dry_run))
+        only = set(args.screens.split(",")) if args.screens else None
+        report = run_scenario(ctx, only, project=args.project)
+    if report:
+        s = report["summary"]
+        print(f"\n[④ 결과] 시나리오 {s['scenarios']}개 · 단계 {s['steps']}개 · 단위 {s['units_covered']}/{s['units_target']}개 들어감 "
+              f"(못 넣은 단위 {s['units_uncovered']}, 아직 안 돌린 단위 {s['units_not_run']}, 제약이라 뺀 단위 {s['units_excluded']}) · 경고 {s['warnings']}건")
+        if report.get("spec_file"):
+            print(f"  사양서: {run_dir / report['spec_file']}")
+        if report.get("trace_file"):
+            print(f"  추적표: {run_dir / report['trace_file']}")
+        print("  자세한 내용: scenario_report.json, scenarios.json")
+    return 0
+
+
 def cmd_trace(args) -> int:
     from .trace import trace
 
@@ -277,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
             stream.reconfigure(errors="replace")
         except (AttributeError, ValueError):
             pass
-    p = argparse.ArgumentParser(prog="specpilot", description="SpecPilot 백엔드 (입력 점검 → ① 앱 프로필 → 게이트 → ② 화면별 분해 → 합치기 → ③ 정합성 판정)")
+    p = argparse.ArgumentParser(prog="specpilot", description="SpecPilot 백엔드 (입력 점검 → ① 앱 프로필 → 게이트 → ② 화면별 분해 → 합치기 → ③ 정합성 판정 / ④ 시나리오 합성)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     c = sub.add_parser("check", help="입력 점검만 (API 호출 없음)")
@@ -316,6 +345,14 @@ def main(argv: list[str] | None = None) -> int:
     j.add_argument("--facts", help="코드 분석 결과 JSON (코드팀 정적 분석). 형식: docs/code_facts.example.json")
     j.add_argument("--dry-run", action="store_true")
     j.set_defaults(func=cmd_judge)
+
+    sn = sub.add_parser("scenario", help="④ 시나리오 합성 (run 결과로 테스트 사양서 만들기. 코드·판정 결과는 쓰지 않음)")
+    sn.add_argument("--run", required=True, help="output/<실행ID>")
+    sn.add_argument("--screens", help="이 화면(또는 APP)이 든 묶음만. 쉼표로 구분")
+    sn.add_argument("--project", help="사양서 머리글의 프로젝트명 (기본: 기획서 파일 이름)")
+    sn.add_argument("--excel-only", action="store_true", help="LLM을 부르지 않고 지난 결과로 scenarios.json과 엑셀만 다시 만든다")
+    sn.add_argument("--dry-run", action="store_true")
+    sn.set_defaults(func=cmd_scenario)
 
     t = sub.add_parser("trace", help="단위 하나를 기획서 원문 → 단위 → 판정·근거 코드까지 거슬러 보기")
     t.add_argument("--run", required=True)
