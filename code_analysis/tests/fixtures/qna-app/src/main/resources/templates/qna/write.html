@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>질문 작성</title>
+  <script th:src="@{/js/qna.js}"></script>
+</head>
+<body>
+<h1>질문 작성</h1>
+<a href="/oauth2/authorization/kakao">카카오로 로그인</a>
+<form th:action="@{/qna}" th:object="${qnaForm}" method="post">
+  <input id="title" th:field="*{title}" maxlength="30">
+  <textarea id="content" th:field="*{content}"></textarea>
+  <button id="saveButton" type="submit">등록</button>
+</form>
+<a th:href="@{/qna}">목록으로</a>
+</body>
+</html>
