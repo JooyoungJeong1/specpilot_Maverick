@@ -1,0 +1,27 @@
+{
+  "scenarios": [
+    {
+      "title": "문의 작성 화면 표시와 입력 검사",
+      "category": null,
+      "steps": [
+        {"action": "일반 사용자 계정으로 로그인하고 문의 작성 화면에 들어간다.", "expected": "문의 작성 화면이 표시된다.", "account": "일반 사용자 / user1@example.com", "input": null, "data_source": "더미", "note": null, "unit_ids": [], "setup": true},
+        {"action": "화면 구성을 확인한다.", "expected": "문의 유형, 제목, 내용 입력란과 비공개 체크박스가 표시된다.", "account": null, "input": null, "data_source": null, "note": null, "unit_ids": ["REQ-QNA-002-01"], "setup": false},
+        {"action": "제목 입력란을 비운 채 다른 곳을 누른다.", "expected": "제목 입력란 아래에 \"제목을 입력해주세요.\" 오류 메시지가 표시된다.", "account": null, "input": "(빈 값)", "data_source": "더미", "note": null, "unit_ids": ["REQ-QNA-002-03"], "setup": false},
+        {"action": "제목에 값을 입력하고 다른 곳을 누른다.", "expected": "제목 오류 메시지가 표시되지 않는다.", "account": null, "input": "배송 문의", "data_source": "더미", "note": "정상 짝", "unit_ids": ["REQ-QNA-002-03"], "setup": false},
+        {"action": "제목에 31자를 입력한다.", "expected": "30자까지만 입력된다.", "account": null, "input": "가×31 (31자)", "data_source": "더미", "note": "확인 필요: 30자를 넘을 때 입력을 막는지 오류를 안내하는지 설계서에 없음", "unit_ids": ["REQ-QNA-002-02"], "setup": false},
+        {"action": "내용에 9자를 입력하고 다른 곳을 누른다.", "expected": "\"내용을 10자 이상 입력해주세요.\" 오류 메시지가 표시된다.", "account": null, "input": "가×9 (9자)", "data_source": "더미", "note": null, "unit_ids": ["REQ-QNA-002-04"], "setup": false},
+        {"action": "내용에 10자를 입력하고 다른 곳을 누른다.", "expected": "오류 메시지가 표시되지 않는다.", "account": null, "input": "가×10 (10자)", "data_source": "더미", "note": "정상 짝", "unit_ids": ["REQ-QNA-002-04", "REQ-QNA-002-06"], "setup": false}
+      ]
+    },
+    {
+      "title": "문의 등록과 목록 반영",
+      "category": null,
+      "steps": [
+        {"action": "일반 사용자 계정으로 문의 작성 화면에서 문의 유형을 고르고 제목과 내용을 입력한다.", "expected": "등록 버튼이 활성화된다.", "account": "일반 사용자 / user1@example.com", "input": "유형: 배송, 제목: 배송 문의, 내용: 가×20 (20자)", "data_source": "더미", "note": null, "unit_ids": ["REQ-QNA-002-07"], "setup": false},
+        {"action": "등록 버튼을 누른다.", "expected": "문의가 저장되고 \"문의가 등록되었습니다.\" 팝업이 표시된다.", "account": null, "input": null, "data_source": null, "note": "테스트 후 등록한 문의 삭제", "unit_ids": ["REQ-QNA-002-09", "REQ-QNA-002-10"], "setup": false},
+        {"action": "팝업이 닫힐 때까지 기다린다.", "expected": "문의 목록 화면으로 이동한다.", "account": null, "input": null, "data_source": null, "note": "확인 필요: 팝업이 저절로 닫히는지 확인 버튼을 눌러야 하는지 설계서에 없음", "unit_ids": ["REQ-QNA-002-11"], "setup": false},
+        {"action": "문의 목록에서 방금 등록한 문의를 찾는다.", "expected": "방금 등록한 문의가 목록에 표시된다.", "account": null, "input": null, "data_source": null, "note": "함의: 등록하면 저장되고 목록으로 이동하므로 목록에 보여야 함", "unit_ids": ["REQ-QNA-002-13"], "setup": false}
+      ]
+    }
+  ]
+}

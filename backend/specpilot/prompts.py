@@ -18,6 +18,7 @@ TEMPLATES = {
     "screen_decompose": "screen_decompose.txt",
     "judge": "judge.txt",
     "code_select": "code_select.txt",
+    "scenario": "scenario.txt",
 }
 
 
@@ -40,6 +41,7 @@ class PromptSet:
             "SCREEN_EXAMPLE": self._read("examples/screen_example.json"),
             "SCREEN_EXAMPLE_2": self._read("examples/screen_example_2.json", required=False),
             "JUDGE_EXAMPLE": self._read("examples/judge_example.json", required=False),
+            "SCENARIO_EXAMPLE": self._read("examples/scenario_example.json", required=False),
             "HINTS": self._read("hints.txt", required=False) or "(없음)",
         }
 
