@@ -2,6 +2,7 @@
 
 기획서 PDF를 넣으면 요구사항 단위 목록(`requirements.json`)이 나오고, 소스 코드를 함께 주면 단위마다 정합성 판정(`judgments.json`)이 나온다.
 ④ 시나리오 합성은 같은 단위 목록으로 테스트 사양서(`테스트사양서.xlsx`, 기업 샘플 양식)를 만든다. ③의 판정 결과와 코드는 쓰지 않는다.
+요구사항 → ③ 판정 → ④ 시험 단계를 한 줄로 잇는 추적표(`추적표.xlsx`)는 사양서와 따로 나온다.
 
 **자세한 구조 설명, 테스트 순서, 평가지표는 [`docs/GUIDE.md`](docs/GUIDE.md)를 본다.**
 프롬프트는 v3.1을 반영했고, v3.1과 다른 곳은 [`docs/PROMPT_CHANGES.md`](docs/PROMPT_CHANGES.md)에 있다.
@@ -29,9 +30,9 @@
    `.env`에 `ANTHROPIC_API_KEY=본인 키`를 채운다. 키는 **사람마다 따로 발급**하고, 공유하거나 커밋하지 않는다.
 5. 설치 확인 (API 키 필요 없음)
    ```bash
-   python -m pytest -q         # 64 passed 이면 정상
+   python -m pytest -q         # 66 passed 이면 정상
    ```
-   `56 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
+   `58 passed, 8 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
 
 poppler 없이도 돌아가지만, 입력 점검의 그림 마커 대조와 quote 원문 대조가 경고로만 남아서 결과가 사람마다 달라질 수 있다. 같이 돌려볼 때는 모두 설치하는 것을 권장한다.
 
@@ -95,7 +96,7 @@ python -m specpilot score --run output/20261005-2030 --key ../private/answer_key
 python -m specpilot merge --run output/20261005-2030
 python -m specpilot validate --screen-file screens/NOTICE-001.json --screen-id NOTICE-001
 
-# 테스트 (API 키 필요 없음, 64개. pdftotext가 없으면 일부는 건너뜀)
+# 테스트 (API 키 필요 없음, 66개. pdftotext가 없으면 일부는 건너뜀)
 python -m pytest -q
 ```
 
@@ -124,7 +125,8 @@ output/<실행ID>/
   scenario/LOGIN-001.json   ④ 묶음별 시나리오 (+ .meta.json). 팝업은 여는 화면 묶음에, 앱 전체 단위는 APP.json
   scenarios.json            ④ 시나리오 전체 (결과 화면의 사양서 탭이 읽음). 못 넣은 단위·제약이라 뺀 단위 목록
   scenario_report.json      시나리오·단계 수, 단위 커버리지, 경고
-  테스트사양서.xlsx          기업 양식 사양서: 개정이력, 목차, 메뉴(Depth)별 시트, 확인 질문, 추적표
+  테스트사양서.xlsx          기업 양식 사양서: 개정이력, 목차, 메뉴(Depth)별 시나리오 시트
+  추적표.xlsx               요구사항 단위 전체 → ③ 판정·근거 코드(돌렸으면) → ④ 시나리오·단계, 제약·빠진 단위 표시
   score_report.json         채점 원본: 요약 숫자, 항목별 정답·판정 (정답 포함, 공유 금지)
   score_review.md           전체 항목 비교표 + 틀린 항목의 정답 근거와 AI 판정·근거 코드 (정답 포함, 공유 금지)
   implied_review.md         함의 단위 O/X 검토지 (정답 없음, 프롬프트 담당과 공유 가능)

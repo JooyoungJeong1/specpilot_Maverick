@@ -12,7 +12,7 @@ from specpilot import cli  # noqa: E402
 from specpilot.config import Settings  # noqa: E402
 from specpilot.llm import ScriptedLLM  # noqa: E402
 from specpilot.prompts import PromptSet  # noqa: E402
-from specpilot.scenario import (SPEC_FILE, build_groups, merge_scenarios, popup_parent,  # noqa: E402
+from specpilot.scenario import (SPEC_FILE, TRACE_FILE, build_groups, merge_scenarios, popup_parent,  # noqa: E402
                                 post_checks, run_scenario, validate_scenarios)
 from specpilot.stages import RunContext, read_json, write_json  # noqa: E402
 
@@ -211,7 +211,7 @@ def test_run_scenario_end_to_end(run_dir):
 def test_spec_excel_follows_company_layout(run_dir):
     run_scenario(ctx_for(run_dir, [R_001, R_002_MISSING, R_002_GAP, R_005, R_APP]), log=lambda *_: None)
     wb = openpyxl.load_workbook(run_dir / SPEC_FILE)
-    assert wb.sheetnames == ["개정이력", "00. 목차", "01. 고객센터", "02. 앱 전체", "확인 질문", "추적표"]
+    assert wb.sheetnames == ["개정이력", "00. 목차", "01. 고객센터", "02. 앱 전체"]      # 기업 샘플처럼 시나리오 시트만
 
     ws = wb["01. 고객센터"]
     assert (ws["A1"].value, ws["B1"].value, ws["A2"].value, ws["B2"].value) == ("프로젝트명", "가상기획서", "시험대상 메뉴명", "고객센터")
@@ -227,14 +227,34 @@ def test_spec_excel_follows_company_layout(run_dir):
     toc = wb["00. 목차"]
     assert toc["A4"].value == "01. 고객센터" and toc["C4"].value == "문의 목록 (01)" and toc["F4"].value == 10101
 
-    q = wb["확인 질문"]
-    assert [q.cell(r, 2).value for r in range(2, 5)] == ["Q-QNA-002-01", "Q-APP-01", "REQ-QNA-005-01"]   # 상 먼저, 그다음 단위 issue
-    assert q["C3"].value == "앱 전체" and q["I2"].value == "TC-QNA-002-01 #1"
 
-    t = wb["추적표"]
-    rows = {t.cell(r, 1).value: (t.cell(r, 7).value, t.cell(r, 8).value) for r in range(2, t.max_row + 1)}
-    assert rows["REQ-QNA-002-03"][1].startswith("사양서 대상 아님 (제약")
-    assert rows["REQ-QNA-002-02"][0] == "TC-QNA-002-01 #2, TC-QNA-002-01 #3"
+
+def trace_rows(run_dir):
+    """추적표.xlsx: 요구사항 ID → (판정, 근거 코드, 시나리오·단계, 비고)"""
+    t = openpyxl.load_workbook(run_dir / TRACE_FILE)["추적표"]
+    assert [c.value for c in t[1]][6:] == ["판정(③)", "근거 코드(③)", "시나리오·단계(④)", "비고"]
+    return {r[0].value: tuple(c.value for c in r[6:10]) for r in t.iter_rows(min_row=2)}
+
+
+def test_trace_table_is_a_separate_file(run_dir):
+    run_scenario(ctx_for(run_dir, [R_001, R_002_MISSING, R_002_GAP, R_005, R_APP]), log=lambda *_: None)
+    rows = trace_rows(run_dir)
+    assert len(rows) == len(UNITS)                                  # 제약 단위까지 요구사항 전체
+    assert rows["REQ-QNA-002-03"][3].startswith("사양서 대상 아님 (제약")
+    assert rows["REQ-QNA-002-02"][2] == "TC-QNA-002-01 #2, TC-QNA-002-01 #3"
+    assert rows["REQ-QNA-002-02"][0] == "③ 전"                      # ③을 아직 안 돌림
+
+
+def test_trace_table_joins_judge_results_when_present(run_dir):
+    run_scenario(ctx_for(run_dir, [R_001, R_002_MISSING, R_002_GAP, R_005, R_APP]), log=lambda *_: None)
+    write_json(run_dir / "judgments.json", {"results": {"REQ-QNA-002-02": {
+        "status": "불일치", "evidence": [{"file": "src/qna.js", "line": 8, "code": "x"}]}}, "items": {}, "extras": []})
+    merge_scenarios(run_dir, log=lambda *_: None)
+    rows = trace_rows(run_dir)
+    assert rows["REQ-QNA-002-02"][:2] == ("불일치", "src/qna.js:8")
+    assert rows["REQ-QNA-001-01"][0] == "-"                         # ③ 결과가 없는 단위
+    spec = openpyxl.load_workbook(run_dir / SPEC_FILE)
+    assert all("불일치" not in str(c.value) for ws in spec for row in ws.iter_rows() for c in row)   # 사양서에는 판정을 넣지 않는다
 
 
 def test_unit_still_missing_after_gap_is_reported(run_dir):
@@ -244,7 +264,7 @@ def test_unit_still_missing_after_gap_is_reported(run_dir):
     assert report["group_status"]["QNA-002"] == "확인필요"
     assert [u["id"] for u in report["uncovered"]] == ["REQ-QNA-002-04"]
     assert report["summary"]["units_not_run"] == 4                 # 돌리지 않은 다른 묶음의 단위
-    rows = {r[0].value: r[7].value for r in openpyxl.load_workbook(run_dir / SPEC_FILE)["추적표"].iter_rows(min_row=2)}
+    rows = {k: v[3] for k, v in trace_rows(run_dir).items()}
     assert rows["REQ-QNA-002-04"].startswith("사양서에 없음")
     assert rows["REQ-QNA-001-01"].startswith("아직 사양서를 만들지 않은 화면")   # 돌리지 않은 묶음은 따로 표시
     assert rows["REQ-QNA-002-01"] is None                                      # 사양서에 들어간 단위는 비고 칸이 비어 있음
@@ -260,7 +280,7 @@ def test_dry_run_writes_prompts_only(run_dir):
     assert run_scenario(ctx_for(run_dir, None), log=lambda *_: None) == {}
     preview = run_dir / "prompts_preview" / "scenario_QNA-002.txt"
     assert preview.exists() and "REQ-QNA-002-04" in preview.read_text(encoding="utf-8")
-    assert not (run_dir / "scenario").exists() and not (run_dir / SPEC_FILE).exists()
+    assert not (run_dir / "scenario").exists() and not (run_dir / SPEC_FILE).exists() and not (run_dir / TRACE_FILE).exists()
 
 
 def test_excel_only_rebuilds_without_llm(run_dir):

@@ -10,7 +10,8 @@
   묶음에 없는 단위 ID, 근거 단위가 없는 단계, 단위의 문구(exact.message)가 예상결과에 있는지.
   함의·issue가 있는 단위를 확인하는 단계에는 비고를 프로그램이 붙인다.
 
-결과: scenario/<묶음>.json(.meta.json), scenarios.json(화면이 읽음), scenario_report.json, 테스트사양서.xlsx
+결과: scenario/<묶음>.json(.meta.json), scenarios.json(화면이 읽음), scenario_report.json,
+      테스트사양서.xlsx(기업 양식), 추적표.xlsx(단위 → ③ 판정 → ④ 단계)
 """
 from __future__ import annotations
 
@@ -27,6 +28,7 @@ APP = "APP"
 APP_DEPTH = "앱 전체"
 SKIP_KINDS = {"제약"}
 SPEC_FILE = "테스트사양서.xlsx"
+TRACE_FILE = "추적표.xlsx"
 # ④에 보내는 단위 필드. quote·source·ref_hint는 빼서, 예상결과를 then·exact로만 쓰게 한다
 # (ref_hint는 다른 화면의 값이라 이 화면의 기준이 아니다).
 SENT_FIELDS = ("id", "screen_id", "origin", "reason", "kind", "given", "when", "conditions", "then", "exact", "issue")
@@ -426,15 +428,21 @@ def merge_scenarios(run_dir: Path, project: str | None = None, log=print) -> dic
         "not_run": [brief(i) for i in not_run],
         "warnings": warnings,
         "spec_file": None,
+        "trace_file": None,
     }
     try:
-        from .excel import write_spec
+        from .excel import write_spec, write_trace
     except ImportError as e:                     # openpyxl이 없으면 엑셀만 건너뛴다
         log(f"  [경고] 엑셀을 만들지 못했습니다 ({e}). pip install -r requirements.txt 후 scenario --excel-only")
     else:
-        path = run_dir / SPEC_FILE
-        write_spec(path, scenarios, requirements, project=project or default_project(run_dir), written=date.today(),
-                   uncovered=set(uncovered), not_run=set(not_run), excluded=set(excluded_ids))
-        report["spec_file"] = path.name
+        write_spec(run_dir / SPEC_FILE, scenarios, requirements, project=project or default_project(run_dir),
+                   written=date.today())
+        report["spec_file"] = SPEC_FILE
+        # 추적표는 사양서와 따로 낸다. ③을 돌렸으면 판정·근거 코드도 같은 줄에 잇는다 (사양서 본문에는 넣지 않음).
+        judgments_path = run_dir / "judgments.json"
+        judgments = read_json(judgments_path) if judgments_path.exists() else None
+        write_trace(run_dir / TRACE_FILE, scenarios, requirements, judgments,
+                    uncovered=set(uncovered), not_run=set(not_run), excluded=set(excluded_ids))
+        report["trace_file"] = TRACE_FILE
     write_json(run_dir / "scenario_report.json", report)
     return report

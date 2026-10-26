@@ -1,14 +1,15 @@
-"""테스트 사양서 엑셀 (④ 결과). 기업 샘플 사양서 양식을 따른다.
+"""테스트 사양서 엑셀과 추적표 엑셀 (④ 결과).
 
+테스트사양서.xlsx — 기업 샘플 사양서 양식 그대로
 - 개정이력, 00. 목차: 메뉴(DEPTH(1))·화면(DEPTH(2))별 시나리오·단계 수
 - NN. <DEPTH(1)>: 정보 칸(프로젝트명, 시험대상 메뉴명, 작성자·작성일, 테스트확인자·시행일)과 두 줄 머리글
   (시험번호/시나리오명, 시험구분 DEPTH(1)·(2), No, 시험절차, 예상결과, 시험데이터 계정·입력값·비고, 확인결과)
   + 우리가 더한 열: 근거 요구사항, 데이터 출처
-- 확인 질문: ①②의 확인 질문과 단위 issue (기획자에게 확인할 것)
-- 추적표: 기획서에서 뽑은 요구사항 단위 전체 → 시나리오·단계 (제약 단위, 사양서에 못 넣은 단위,
-  아직 ④를 돌리지 않은 화면의 단위 표시). 사양서가 기획서를 빠짐없이 다뤘는지 보는 표다.
+  판정 결과는 넣지 않는다. 사양서는 기획서만 보고 만든다.
 
-판정 결과는 넣지 않는다. 사양서는 기획서만 보고 만든다.
+추적표.xlsx — 사양서와 따로 낸다
+- 기획서에서 뽑은 요구사항 단위 전체 → ③ 판정·근거 코드(있으면) → ④ 시나리오·단계.
+  사양서가 기획서를 빠짐없이 다뤘는지, 판정과 사양서가 같은 단위로 이어지는지 보는 표다.
 """
 from __future__ import annotations
 
@@ -234,37 +235,32 @@ def _table(wb: Workbook, title: str, header: list[str], rows: list[list], widths
     _print_setup(ws, "1:1")
 
 
-def write_spec(path: Path, scenarios: list[dict], requirements: dict, *, project: str, written: date,
-               uncovered: set[str] = frozenset(), excluded: set[str] = frozenset(),
-               not_run: set[str] = frozenset()) -> Path:
-    names = {s["screen_id"]: s.get("name") or "" for s in (requirements.get("app_profile") or {}).get("screens", [])
-             if isinstance(s, dict) and s.get("screen_id")}
-    units = [u for u in requirements.get("units", []) if isinstance(u, dict) and u.get("id")]
-    refs = _step_refs(scenarios)
-
+def write_spec(path: Path, scenarios: list[dict], requirements: dict, *, project: str, written: date) -> Path:
+    """테스트 사양서: 개정이력, 00. 목차, 메뉴(DEPTH(1))별 시나리오 시트만 (기업 샘플 양식)."""
     wb = Workbook()
     wb.remove(wb.active)
     _history(wb, project, written)
-    used = {"개정이력", "00. 목차", "확인 질문", "추적표"}
+    used = {"개정이력", "00. 목차"}
     depth1s = list(dict.fromkeys(sc["depth1"] for sc in scenarios))
     menus = [(sheet_title(f"{i:02d}. {d1}", used), d1, [sc for sc in scenarios if sc["depth1"] == d1])
              for i, d1 in enumerate(depth1s, 1)]
     _toc(wb, menus, written)
     for title, d1, mine in menus:
         _spec_sheet(wb, title, d1, mine, project, written)
+    return _save(wb, path)
 
-    questions = sorted(requirements.get("questions", []), key=lambda q: 0 if q.get("priority") == "상" else 1)
-    qrows = [["질문", q.get("id"), _screen_label(_question_screen(q.get("id")), names), q.get("priority"), q.get("topic"),
-              q.get("question"), q.get("why"), ", ".join(q.get("related_units") or []),
-              ", ".join(r for u in (q.get("related_units") or []) for r in refs.get(u, [])), ""]
-             for q in questions]
-    qrows += [["단위 확인", u["id"], _screen_label(u.get("screen_id"), names), "-", u.get("then"), u.get("issue"),
-               u.get("quote"), u["id"], ", ".join(refs.get(u["id"], [])), ""]
-              for u in units if (u.get("issue") or "").strip()]
-    _table(wb, "확인 질문", ["구분", "번호", "화면", "우선순위", "주제", "내용", "근거·이유", "관련 요구사항", "관련 시험 단계", "답변"], qrows,
-           {"A": 10, "B": 18, "C": 22, "D": 9, "E": 28, "F": 44, "G": 44, "H": 20, "I": 24, "J": 30})
 
-    trows = []
+def write_trace(path: Path, scenarios: list[dict], requirements: dict, judgments: dict | None = None, *,
+                uncovered: set[str] = frozenset(), excluded: set[str] = frozenset(),
+                not_run: set[str] = frozenset()) -> Path:
+    """추적표: 요구사항 단위마다 ③ 판정·근거 코드(③을 돌렸으면)와 ④ 시나리오·단계를 한 줄로 잇는다."""
+    names = {s["screen_id"]: s.get("name") or "" for s in (requirements.get("app_profile") or {}).get("screens", [])
+             if isinstance(s, dict) and s.get("screen_id")}
+    units = [u for u in requirements.get("units", []) if isinstance(u, dict) and u.get("id")]
+    refs = _step_refs(scenarios)
+    results = (judgments or {}).get("results") or {}
+
+    rows = []
     for u in units:
         if u["id"] in excluded:
             remark = "사양서 대상 아님 (제약: 화면에서 확인할 수 없는 처리 방식이라 정합성 판정에만 씀)"
@@ -274,20 +270,21 @@ def write_spec(path: Path, scenarios: list[dict], requirements: dict, *, project
             remark = "아직 사양서를 만들지 않은 화면 (scenario를 이 화면 묶음까지 돌리면 채워짐)"
         else:
             remark = ""
-        trows.append([u["id"], _screen_label(u.get("screen_id"), names), u.get("kind"), u.get("origin"), u.get("then"),
-                      ", ".join(u.get("source") or []), ", ".join(refs.get(u["id"], [])), remark])
-    _table(wb, "추적표", ["요구사항 ID", "화면", "종류", "명시/함의", "요구사항", "기획서 위치", "시나리오·단계", "비고"], trows,
-           {"A": 20, "B": 22, "C": 8, "D": 9, "E": 44, "F": 28, "G": 30, "H": 36})
+        r = results.get(u["id"]) or {}
+        evidence = ", ".join(f"{e.get('file')}:{e.get('line')}" for e in (r.get("evidence") or []) if isinstance(e, dict))
+        rows.append([u["id"], _screen_label(u.get("screen_id"), names), u.get("kind"), u.get("origin"), u.get("then"),
+                     ", ".join(u.get("source") or []), r.get("status") or ("③ 전" if not results else "-"),
+                     evidence, ", ".join(refs.get(u["id"], [])), remark])
+    wb = Workbook()
+    wb.remove(wb.active)
+    _table(wb, "추적표", ["요구사항 ID", "화면", "종류", "명시/함의", "요구사항", "기획서 위치", "판정(③)", "근거 코드(③)",
+                       "시나리오·단계(④)", "비고"], rows,
+           {"A": 20, "B": 22, "C": 8, "D": 9, "E": 44, "F": 28, "G": 10, "H": 30, "I": 30, "J": 36})
+    return _save(wb, path)
 
+
+def _save(wb: Workbook, path: Path) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
     return path
-
-
-def _question_screen(qid: str | None) -> str | None:
-    """질문 ID에서 화면을 읽는다. Q-APP-01 → APP, Q-LOGIN-001-03 → LOGIN-001"""
-    if not qid or not qid.startswith("Q-"):
-        return None
-    body = qid[2:]
-    return "APP" if body.startswith("APP") else re.sub(r"-\d+$", "", body)

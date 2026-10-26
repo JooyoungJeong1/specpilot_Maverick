@@ -260,6 +260,8 @@ def cmd_scenario(args) -> int:
               f"(못 넣은 단위 {s['units_uncovered']}, 아직 안 돌린 단위 {s['units_not_run']}, 제약이라 뺀 단위 {s['units_excluded']}) · 경고 {s['warnings']}건")
         if report.get("spec_file"):
             print(f"  사양서: {run_dir / report['spec_file']}")
+        if report.get("trace_file"):
+            print(f"  추적표: {run_dir / report['trace_file']}")
         print("  자세한 내용: scenario_report.json, scenarios.json")
     return 0
 

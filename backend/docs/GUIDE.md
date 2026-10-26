@@ -47,7 +47,7 @@
                                                                                                 └─(합치기)─▶ judgments.json
                                                                                                              judge_report.json
                                                                    정답 세트 ─(score)─▶ score_report.json, score_review.md, implied_review.md
-requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)─▶ scenarios.json, scenario_report.json, 테스트사양서.xlsx
+requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)─▶ scenarios.json, scenario_report.json, 테스트사양서.xlsx, 추적표.xlsx
                    (③ 결과와 코드는 쓰지 않는다. 둘은 단위 ID로만 이어진다)
 ```
 
@@ -74,7 +74,7 @@ requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)�
 specpilot-backend/
   prompts/          프롬프트 문장 (코드 아님. 프롬프트 담당이 고치는 곳)
   specpilot/        파이썬 코드
-  tests/            API 키 없이 돌아가는 테스트 64개
+  tests/            API 키 없이 돌아가는 테스트 66개
   docs/             이 문서, 프롬프트 변경 정리, 정답 세트 형식 예시
 ```
 
@@ -218,7 +218,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | | |
 | --- | --- |
 | 입력 | `requirements.json`만 (③의 판정 결과와 코드는 쓰지 않는다. 사양서의 예상결과가 코드 동작에 끌려가지 않게) |
-| 출력 | `scenario/묶음ID.json`(+ meta), `scenarios.json`, `scenario_report.json`, `테스트사양서.xlsx` |
+| 출력 | `scenario/묶음ID.json`(+ meta), `scenarios.json`, `scenario_report.json`, `테스트사양서.xlsx`, `추적표.xlsx` |
 | 프롬프트 | `prompts/scenario.txt` + 예시(`examples/scenario_example.json`) |
 
 **처리 순서**
@@ -228,7 +228,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 4. **커버리지.** 어느 단계에도 들어가지 않은 단위가 있으면 **그 단위만 넣어 한 번 더 요청**한다(`*_gap` 호출). 그래도 없으면 `uncovered`로 남기고 그 묶음은 확인필요.
 5. **마무리** (`scenario.finish`). 시나리오 ID(`TC-<묶음>-NN`), 단계 번호, DEPTH(1)(묶음 주 화면의 Depth)·DEPTH(2)(시나리오가 가장 많이 확인하는 화면 이름, APP은 LLM이 적은 기능 이름)는 프로그램이 붙인다. 함의 단위와 issue가 있는 단위를 확인하는 단계에는 비고("함의: …", "확인 필요: …")를 붙인다.
 6. **경고** (`scenario.post_checks`). 근거 단위가 없는데 준비 단계도 아닌 단계(지어낸 단계일 수 있음), 단위의 문구(exact.message)가 예상결과에 없는 단계(정상 짝은 제외, 띄어쓰기는 비교하지 않음).
-7. **합치기·엑셀** (`scenario.merge_scenarios`, `excel.write_spec`). LLM을 부르지 않는다(`--excel-only`로 따로 돌릴 수 있음). 엑셀은 기업 샘플 양식을 따른다: 개정이력, 00. 목차, 메뉴(Depth)별 시트(정보 칸 + 두 줄 머리글: 시험번호/시나리오명, 시험구분 DEPTH(1)·(2), No, 시험절차, 예상결과, 시험데이터 계정·입력값·비고, 확인결과 O/X), 확인 질문(①②의 질문 + 단위 issue), 추적표(단위 → 시나리오·단계). 우리가 더한 열은 근거 요구사항, 데이터 출처다. 판정 결과는 넣지 않는다.
+7. **합치기·엑셀** (`scenario.merge_scenarios`, `excel.write_spec`). LLM을 부르지 않는다(`--excel-only`로 따로 돌릴 수 있음). 사양서 엑셀은 기업 샘플 양식 그대로 개정이력, 00. 목차, 메뉴(Depth)별 시나리오 시트만 둔다(정보 칸 + 두 줄 머리글: 시험번호/시나리오명, 시험구분 DEPTH(1)·(2), No, 시험절차, 예상결과, 시험데이터 계정·입력값·비고, 확인결과 O/X). 우리가 더한 열은 근거 요구사항, 데이터 출처다. 판정 결과는 넣지 않는다. 추적표(`excel.write_trace`)는 따로 낸다: 요구사항 단위 전체를 한 줄씩, ③을 돌렸으면 판정·근거 코드, ④ 시나리오·단계, 제약·빠진 단위·아직 안 돌린 화면 표시. 확인 질문은 결과 화면의 "질문 시트" 내보내기로 받는다.
 
 ### 2-9. 단계를 가로지르는 도구
 
@@ -273,7 +273,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 
 5. **설치 확인** (API 키 필요 없음)
    ```bash
-   python -m pytest -q        # 64 passed (pdftotext가 없으면 일부는 skipped)
+   python -m pytest -q        # 66 passed (pdftotext가 없으면 일부는 skipped)
    ```
 
 Windows에서는 `python3` 대신 `python`을 쓰고, 경로에 공백이나 한글이 있으면 따옴표로 감싼다.
