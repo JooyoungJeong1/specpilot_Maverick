@@ -1,5 +1,6 @@
 // 분석 진행 (CLAUDE.md 5장 /progress?job=<작업 ID>). 초안 local/reference/app.html의 progress()를 옮겼다.
 // 입력 점검 → ① → ② → ③ (→ ④) 단계별 진행률과 화면별 상태 표.
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { selectRun, useProgress } from '../api/useRun.ts'
 import FlowSteps from '../components/FlowSteps.tsx'
@@ -10,7 +11,7 @@ const STAGE_TEXT: Record<StageProgress['key'], { title: string; sub: (total: num
   profile: { title: '① 문서 파악', sub: () => '기획서 전체' },
   decompose: { title: '② 요구사항 추출', sub: (n) => `화면 ${n}개` },
   judge: { title: '③ 코드와 비교', sub: (n) => `화면 ${n}개` },
-  scenario: { title: '④ 사양서 작성', sub: () => '시나리오' },
+  scenario: { title: '④ 사양서 작성', sub: (n) => (n ? `화면 묶음 ${n}개` : '시나리오') },
 }
 const STATE_TEXT: Record<StageProgress['state'], string> = {
   waiting: '대기', running: '진행 중', done: '완료', failed: '실패', skipped: '준비 중',
@@ -56,6 +57,7 @@ export default function Progress() {
   const [params] = useSearchParams()
   const jobId = params.get('job')
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data: p, isLoading, error } = useProgress(jobId)
 
   if (!jobId || (!isLoading && !p && !error)) {
@@ -72,10 +74,11 @@ export default function Progress() {
   const done = p.state === 'done'
   const message = done
     ? `분석이 끝났습니다.${p.problems !== null ? ` 확인할 곳 ${p.problems}건이 있습니다.` : ''}`
-    : p.state === 'running' ? '요구사항을 뽑아 코드와 비교하고 있습니다. 창을 닫아도 계속 진행됩니다.'
+    : p.state === 'running' ? '요구사항을 뽑아 코드와 비교하고 테스트 사양서를 만들고 있습니다. 창을 닫아도 계속 진행됩니다.'
       : `분석을 마치지 못했습니다. ${p.message ?? ''}`
   const openResult = () => {
     if (!p.runId) return
+    queryClient.removeQueries({ queryKey: ['runs'] })   // 방금 끝난 실행이 목록에 들어 있게 다시 읽는다
     selectRun(p.runId)
     navigate('/summary')
   }

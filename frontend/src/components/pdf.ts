@@ -10,8 +10,10 @@ export const PAGE_WIDTH = 2000
 let pdfjsPromise: Promise<typeof import('pdfjs-dist')> | null = null
 const docs = new Map<string, Promise<PDFDocumentProxy>>()
 
+// legacy 빌드를 쓴다. 기본 빌드(pdfjs-dist 6)는 아주 최근 브라우저에만 있는 기능(Math.sumPrecise,
+// Map.getOrInsertComputed)을 써서, 조금만 지난 Chrome·Edge에서도 기획서 쪽이 그려지지 않는다.
 function pdfjs() {
-  pdfjsPromise ??= Promise.all([import('pdfjs-dist'), import('pdfjs-dist/build/pdf.worker.min.mjs?url')])
+  pdfjsPromise ??= Promise.all([import('pdfjs-dist/legacy/build/pdf.mjs'), import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url')])
     .then(([lib, worker]) => {
       lib.GlobalWorkerOptions.workerSrc = worker.default
       return lib

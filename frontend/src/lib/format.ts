@@ -1,9 +1,10 @@
 import type { RunData, RunSummary } from '../api/api.ts'
 import { NOT_JUDGED, UNIT_STATUSES, type UnitStatus } from './verdicts.ts'
 
-/** 실행 이름. mock은 가짜 데이터라는 것이 보이게 한다. */
-export function runLabel(run: Pick<RunData, 'id' | 'source'>): string {
-  return run.source === 'mock' ? `예시 데이터 (${run.id})` : run.id
+/** 실행 이름. mock은 가짜 데이터라는 것이 보이게 한다. 웹에서 올려 돌린 실행은 입력한 프로젝트 이름. */
+export function runLabel(run: Pick<RunData, 'id' | 'source'> & { name?: string | null }): string {
+  if (run.source === 'mock') return `예시 데이터 (${run.id})`
+  return run.name || run.id
 }
 
 /** "2026-10-16T01:50:12" → "2026-10-16 01:50" */
@@ -22,7 +23,7 @@ export function runCounts(run: Pick<RunSummary, 'units' | 'byStatus' | 'notJudge
 }
 
 /** 상단 바 프로젝트 정보. 초안: "이름 · 기획서 화면 n개 · 분석 날짜" */
-export function projectMeta(run: Pick<RunData, 'id' | 'source' | 'requirements'>): string {
+export function projectMeta(run: Pick<RunData, 'id' | 'source' | 'requirements'> & { name?: string | null }): string {
   const req = run.requirements
   return `${runLabel(run)} · 기획서 화면 ${req.app_profile.screens.length}개 · 분석 ${formatDateTime(req.meta.merged_at)}`
 }

@@ -15,12 +15,30 @@
 | --- | --- | --- |
 | `backend/` | 파이프라인(①②③, 채점), 프롬프트 | 조장, 요구사항분석팀, 코드팀 |
 | `code_analysis/` | 코드 정적 분석 모듈 | 코드팀 |
-| `frontend/` | 화면 (예정) | UI 담당 |
+| `frontend/` | 웹 화면: 기획서·코드 올리기 → 분석 진행 → 결과 검토, 엑셀 내보내기 | UI 담당 |
 
 
 - 설치와 실행 방법: [`backend/README.md`](backend/README.md)
 - 구조 설명, 파트별로 고칠 파일, 평가 방법: [`backend/docs/GUIDE.md`](backend/docs/GUIDE.md)
 - 코드 분석 모듈: [`code_analysis/README.md`](code_analysis/README.md)
+- 웹 화면: [`frontend/README.md`](frontend/README.md)
+
+## 웹으로 시연 (조장 PC)
+
+웹에서 기획서 PDF와 소스 코드를 올리면 ①~④가 실제로 돈다. 터미널 두 개를 연다.
+
+```bash
+# 터미널 1: 시연 서버 (처음 한 번 pip install -r requirements.txt, .env에 API 키)
+cd backend
+python -m specpilot serve
+
+# 터미널 2: 웹 (처음 한 번 npm ci)
+cd frontend
+npm run dev
+```
+
+터미널 2에 찍힌 주소를 열고 "새로 분석하기" → 기획서 PDF와 코드 zip을 올려 "분석 시작" → 진행 화면 → "결과 보기".
+명령어로 돌려 둔 결과(`backend/output/`)도 웹의 "최근 분석"에 그대로 보인다. 자세한 내용은 [`backend/README.md`](backend/README.md#웹으로-시연-specpilotserverpy).
 
 ## 공통 규칙
 

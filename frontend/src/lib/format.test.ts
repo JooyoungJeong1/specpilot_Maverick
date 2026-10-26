@@ -14,6 +14,10 @@ describe('runLabel', () => {
   it('mock은 예시 데이터임을 밝힌다', () => {
     expect(runLabel({ id: 'qna-example', source: 'mock' })).toBe('예시 데이터 (qna-example)')
   })
+  it('웹에서 올려 돌린 실행은 프로젝트 이름을 쓴다', () => {
+    expect(runLabel({ id: 'demo-20261026-213000', source: 'local', name: '시연 프로젝트' })).toBe('시연 프로젝트')
+    expect(runLabel({ id: 'full1', source: 'local', name: null })).toBe('full1')
+  })
 })
 
 describe('runCounts', () => {

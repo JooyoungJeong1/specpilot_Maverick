@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { startAnalysis } from '../api/api.ts'
+import { useServerStatus } from '../api/useRun.ts'
 import FlowSteps from '../components/FlowSteps.tsx'
 import { defaultName, formatSize, isZip, missingInputs, splitPlans } from '../lib/upload.ts'
 
@@ -59,6 +60,7 @@ export default function NewProject() {
   const [warn, setWarn] = useState<string | null>(null)
   const [tried, setTried] = useState(false)
   const [busy, setBusy] = useState(false)
+  const server = useServerStatus()
 
   const addPlans = (files: File[]) => {
     const { pdfs, rejected } = splitPlans(files)
@@ -83,7 +85,7 @@ export default function NewProject() {
       })
       navigate(`/progress?job=${encodeURIComponent(jobId)}`)
     } catch (e) {
-      setWarn(`분석을 시작하지 못했습니다. ${String(e)}`)
+      setWarn(`분석을 시작하지 못했습니다. ${e instanceof Error ? e.message : String(e)}`)
       setBusy(false)
     }
   }
@@ -121,8 +123,19 @@ export default function NewProject() {
       {(warn || (tried && missing.length > 0)) && (
         <div className="note" role="alert">{[warn, ...(tried ? missing : [])].filter(Boolean).join(' ')}</div>
       )}
-      {import.meta.env.DEV && (
-        <p style={{ margin: '0 0 12px' }}><span className="devtag">개발용: 서버 연결 전이라 파일을 올리지 않고, 가장 최근 결과로 진행 화면을 보여 줍니다</span></p>
+      {server.data?.running && (
+        <div className="note" role="status">
+          다른 분석이 진행 중입니다. 끝난 뒤에 시작할 수 있습니다.{' '}
+          <Link className="linkbtn" to={`/progress?job=${encodeURIComponent(server.data.running)}`}>진행 화면 보기 →</Link>
+        </div>
+      )}
+      {server.data && !server.data.running && (
+        <p className="small muted" style={{ margin: '0 0 12px' }}>올린 파일로 실제 분석을 돌립니다. 기획서 크기에 따라 수십 분이 걸릴 수 있습니다.</p>
+      )}
+      {import.meta.env.DEV && server.data === null && (
+        <p style={{ margin: '0 0 12px' }}>
+          <span className="devtag">개발용: 시연 서버(backend에서 python -m specpilot serve)가 꺼져 있어 파일을 올리지 않고, 가장 최근 결과로 진행 화면을 보여 줍니다</span>
+        </p>
       )}
       <div className="actions">
         <Link className="btn" to="/">취소</Link>

@@ -1,14 +1,14 @@
-// 분석 진행 상태. 백엔드에는 아직 진행을 알려 주는 API가 없어서 프론트가 정한 모양이다.
-// 서버는 실행 폴더의 파일로 이 값을 만들 수 있다 (CLAUDE.md 9장).
+// 분석 진행 상태. 프론트가 정한 모양이고, 시연 서버(backend/specpilot/server.py의 build_progress)가
+// 실행 폴더의 파일로 이 값을 만든다 (CLAUDE.md 9장).
 //   입력 점검: preflight.json의 verdict (반려면 전체 반려)
-//   ①: app_profile.meta.json
+//   ①: app_profile.json
 //   ②: screens/<화면ID>.meta.json의 status (완료/확인필요/실패/반려), 단위 수
 //   ③: judge/<화면ID>.meta.json의 status (완료/확인필요/실패)
-//   ④: 아직 없음
+//   ④: scenario/<묶음ID>.meta.json의 status (화면 묶음별), 끝나면 scenario_report.json
 import type { ScreenRunStatus } from './requirements.ts'
 
 export type StageKey = 'preflight' | 'profile' | 'decompose' | 'judge' | 'scenario'
-/** skipped: 이번 실행에서 하지 않는 단계 (④는 아직 없음, ③은 코드 없이 돌린 경우) */
+/** skipped: 이번 실행에서 하지 않는 단계 (③은 코드 없이 돌린 경우, 서버 없이 흉내 낼 때의 ④) */
 export type StageState = 'waiting' | 'running' | 'done' | 'failed' | 'skipped'
 
 export interface StageProgress {

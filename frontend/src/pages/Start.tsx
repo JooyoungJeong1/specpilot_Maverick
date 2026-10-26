@@ -1,12 +1,13 @@
 // 시작 (CLAUDE.md 5장 /). 초안 local/reference/app.html의 start()를 옮겼다.
 import { Link } from 'react-router-dom'
-import { selectRun, useRuns } from '../api/useRun.ts'
+import { selectRun, useRuns, useServerStatus } from '../api/useRun.ts'
 import StackBar from '../components/StackBar.tsx'
 import { formatDateTime, runCounts, runLabel } from '../lib/format.ts'
 import { UNIT_STATUSES } from '../lib/verdicts.ts'
 
 export default function Start() {
   const { data: runs, isLoading, error } = useRuns()
+  const running = useServerStatus().data?.running
 
   return (
     <div className="wrapS">
@@ -26,6 +27,12 @@ export default function Start() {
           <span className="go">기획서·코드 올리기 →</span>
         </Link>
       </div>
+      {running && (
+        <div className="note" role="status">
+          분석이 진행 중입니다.{' '}
+          <Link className="linkbtn" to={`/progress?job=${encodeURIComponent(running)}`}>진행 화면 보기 →</Link>
+        </div>
+      )}
       <section className="card recent">
         <h2>최근 분석</h2>
         {error && <div className="empty">분석 목록을 불러오지 못했습니다. {String(error)}</div>}
