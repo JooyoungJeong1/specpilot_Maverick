@@ -434,7 +434,7 @@ def merge_scenarios(run_dir: Path, project: str | None = None, log=print) -> dic
     else:
         path = run_dir / SPEC_FILE
         write_spec(path, scenarios, requirements, project=project or default_project(run_dir), written=date.today(),
-                   uncovered=set(uncovered) | set(not_run), excluded=set(excluded_ids))
+                   uncovered=set(uncovered), not_run=set(not_run), excluded=set(excluded_ids))
         report["spec_file"] = path.name
     write_json(run_dir / "scenario_report.json", report)
     return report

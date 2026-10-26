@@ -5,7 +5,8 @@
   (시험번호/시나리오명, 시험구분 DEPTH(1)·(2), No, 시험절차, 예상결과, 시험데이터 계정·입력값·비고, 확인결과)
   + 우리가 더한 열: 근거 요구사항, 데이터 출처
 - 확인 질문: ①②의 확인 질문과 단위 issue (기획자에게 확인할 것)
-- 추적표: 요구사항 단위 → 시나리오·단계 (제약 단위, 사양서에 못 넣은 단위 표시)
+- 추적표: 기획서에서 뽑은 요구사항 단위 전체 → 시나리오·단계 (제약 단위, 사양서에 못 넣은 단위,
+  아직 ④를 돌리지 않은 화면의 단위 표시). 사양서가 기획서를 빠짐없이 다뤘는지 보는 표다.
 
 판정 결과는 넣지 않는다. 사양서는 기획서만 보고 만든다.
 """
@@ -234,7 +235,8 @@ def _table(wb: Workbook, title: str, header: list[str], rows: list[list], widths
 
 
 def write_spec(path: Path, scenarios: list[dict], requirements: dict, *, project: str, written: date,
-               uncovered: set[str] = frozenset(), excluded: set[str] = frozenset()) -> Path:
+               uncovered: set[str] = frozenset(), excluded: set[str] = frozenset(),
+               not_run: set[str] = frozenset()) -> Path:
     names = {s["screen_id"]: s.get("name") or "" for s in (requirements.get("app_profile") or {}).get("screens", [])
              if isinstance(s, dict) and s.get("screen_id")}
     units = [u for u in requirements.get("units", []) if isinstance(u, dict) and u.get("id")]
@@ -268,6 +270,8 @@ def write_spec(path: Path, scenarios: list[dict], requirements: dict, *, project
             remark = "사양서 대상 아님 (제약: 화면에서 확인할 수 없는 처리 방식이라 정합성 판정에만 씀)"
         elif u["id"] in uncovered:
             remark = "사양서에 없음 (④가 이 단위를 확인하는 단계를 만들지 못함)"
+        elif u["id"] in not_run:
+            remark = "아직 사양서를 만들지 않은 화면 (scenario를 이 화면 묶음까지 돌리면 채워짐)"
         else:
             remark = ""
         trows.append([u["id"], _screen_label(u.get("screen_id"), names), u.get("kind"), u.get("origin"), u.get("then"),

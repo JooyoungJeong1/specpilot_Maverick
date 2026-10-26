@@ -246,6 +246,8 @@ def test_unit_still_missing_after_gap_is_reported(run_dir):
     assert report["summary"]["units_not_run"] == 4                 # 돌리지 않은 다른 묶음의 단위
     rows = {r[0].value: r[7].value for r in openpyxl.load_workbook(run_dir / SPEC_FILE)["추적표"].iter_rows(min_row=2)}
     assert rows["REQ-QNA-002-04"].startswith("사양서에 없음")
+    assert rows["REQ-QNA-001-01"].startswith("아직 사양서를 만들지 않은 화면")   # 돌리지 않은 묶음은 따로 표시
+    assert rows["REQ-QNA-002-01"] is None                                      # 사양서에 들어간 단위는 비고 칸이 비어 있음
 
 
 def test_screens_option_picks_group_by_member_screen(run_dir):
