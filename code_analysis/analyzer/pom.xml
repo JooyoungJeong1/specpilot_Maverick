@@ -5,7 +5,7 @@
 
   <groupId>com.thinktree.specpilot</groupId>
   <artifactId>specpilot-analyzer</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1</version>
   <packaging>jar</packaging>
   <name>specpilot-analyzer</name>
   <description>JavaParser + Symbol Solver(+ Jsoup)로 Gradle 기반 프로젝트를 분석하는 도구</description>

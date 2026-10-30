@@ -4,6 +4,7 @@
     {"unit_id": "REQ-QNA-002-01", "status": "미구현", "mismatch": [], "evidence": [{"file": "templates/qna/write.html", "line": 14, "code": "<select id=\"type\" name=\"type\">"}], "note": "write.html에 문의 유형, 제목, 내용 입력란은 있고 비공개 체크박스는 없음", "split_issue": "입력란 세 개 표시는 구현, 비공개 체크박스 표시는 미구현"},
     {"unit_id": "REQ-QNA-002-03", "status": "불일치", "mismatch": [{"field": "message", "spec": "제목을 입력해주세요.", "code": "제목을 입력하세요"}], "evidence": [{"file": "static/js/qna.js", "line": 8, "code": "if (!title.value.trim()) showError(title, \"제목을 입력하세요\");"}], "note": null, "split_issue": null},
     {"unit_id": "REQ-QNA-002-10", "status": "미구현", "mismatch": [], "evidence": [], "note": "QnaController.create는 목록으로 이동만 함. qna.js와 write.html에 완료 팝업 없음", "split_issue": null},
+    {"unit_id": "REQ-QNA-002-04", "status": "구현", "mismatch": [], "evidence": [{"file": "templates/qna/write.html", "line": 9, "code": "<input id=\"title\" name=\"title\" maxlength=\"30\">"}], "note": "브라우저 기본 동작: maxlength=30이라 30자 넘게 입력되지 않음 (write.html 9줄)", "split_issue": null},
     {"unit_id": "REQ-QNA-002-05", "status": "구현", "mismatch": [], "evidence": [{"file": "static/js/qna.js", "line": 12, "code": "if (content.value.length < 10) showError(content, \"내용을 10자 이상 입력해주세요.\");"}], "note": "브라우저 안에서만 검사하고 서버 요청 없음", "split_issue": null}
   ],
   "extras": [

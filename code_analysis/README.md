@@ -28,7 +28,7 @@
 pip install -r code_analysis/requirements.txt          # tree-sitter (Python 3.10 이상, Windows 3.14용도 있음)
 
 cd code_analysis/analyzer                              # 백엔드 분석기 빌드 (JDK 17 이상, Maven)
-mvn -q clean package                                   # → target/specpilot-analyzer-0.8.0.jar
+mvn -q clean package                                   # → target/specpilot-analyzer-0.8.1.jar
 cd ../..
 ```
 
@@ -81,7 +81,7 @@ python -m specpilot judge --run output/<실행> --code inputs/<샘플코드> --f
 | 템플릿 위치 | 소스 경로에서 짐작. 틀리면 `template_refs`가 비고 바인딩이 전부 `mismatch`가 됐다 (실제로 v7 결과가 그랬음) | 넘겨받은 폴더 안의 `templates/`에서 찾음 |
 | 바인딩 | 메서드가 반환하는 뷰가 하나일 때만 판단 | 분기별로 판단 ("예외 시 errorMessage를 넘기고 같은 화면을 반환"), 헬퍼 메서드 안에서 넣은 값은 부른 자리의 분기로 |
 | 콜그래프 | 해석 결과와 `spring_data_derived` 등 표시 | 같음 + 호출한 메서드, 분기 문맥, 받는 쪽 타입, 선언 위치, 인터페이스면 모든 구현 메서드 위치 |
-| 더한 것 | — | 컨트롤러 경로(HTTP 메서드, 경로, @Valid, 분기별 반환), 보안 설정 체이닝, 검증 애노테이션, 예외 문구(`orElseThrow` 포함), 템플릿 구조(검증 오류 출력, 포함 조각, 스크립트, 폼·링크, 입력란, 버튼) |
+| 더한 것 | — | 컨트롤러 경로(HTTP 메서드, 경로, @Valid, 분기별 반환), 보안 설정 체이닝, 검증 애노테이션, 예외 문구(`orElseThrow` 포함), 템플릿 구조(검증 오류 출력, 포함 조각, 스크립트, 폼·링크, 입력란, 버튼, v8.1부터 조건이 붙은 문구 `texts`) |
 
 **delombok을 하지 않는 이유**: delombok한 코드를 파싱하면 줄 번호가 원본과 달라져 ③의 근거 줄과 맞지 않는다. 대신 Lombok이 만든 getter를 인자로 넘기는 호출은 메서드 고르기에 실패할 수 있는데, 그때도 분석기는 **받는 쪽의 타입**(예: `noticeRepository`의 타입 `NoticeRepository`)은 대개 풀어 낸다. Python이 그 타입의 같은 이름·같은 인자 수 메서드로 이어 준다 (`backend_model.py`). 어느 쪽으로 정했는지는 `_meta.call_resolution.target_by`에 남는다.
 
@@ -103,6 +103,7 @@ verification2의 같은 파일을 이어받았다. 그때 뽑던 `selectors`, `e
 - forEach로 여러 요소에 한꺼번에 붙인 이벤트의 대상 요소 (`target`)
 - 서버 요청·이동 주소 (`url_refs`)
 - 파일 이름 대신 ③과 같은 상대 경로, ③의 줄 목록 기준 줄 번호
+- 라이브러리에 넘기는 설정 객체 (`lib_configs`: `agGrid.createGrid(el, gridOptions)`의 `pagination`처럼 이벤트가 아니라 설정으로 동작하는 기능)
 
 verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으로 판정)는 빼고, 판정은 ③에 맡긴다.
 
@@ -121,8 +122,8 @@ verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으�
 | `validation` | 폼 클래스의 검증 애노테이션과 메시지, 그 검사가 언제 어느 경로에서 도는지 | `QnaForm.title: @NotBlank("제목을 입력하세요"), @Size(max=30, …) — 제출 후 서버에서 검사: POST /qna (@Valid)` | 화면 |
 | `call` | 서비스 메서드 → 저장소·다른 서비스 호출 | `QnaService.create → QnaRepository.existsByTitle(이름 규칙 쿼리), NotifyService.send(구현: MailNotifyService, SmsNotifyService), QnaRepository.save(Spring Data 기본 기능)` | 화면 |
 | `message` | 예외로 던지는 문구와 그 조건 (`orElseThrow` 포함) | `QnaService.create: qnaRepository.existsByTitle(…) 일 때 IllegalArgumentException("이미 있는 제목입니다.")` | 화면 |
-| `js` | 요소별 이벤트와 처리 함수가 바꾸는 것, 파일이 쓰는 이벤트 종류(blur·focusout·submit이 없으면 명시), 그 JS를 불러오는 템플릿 | `#title input 이벤트 → update: saveButton.disabled = !titleInput.value.trim()` | 화면 |
-| `html` | 입력란 제약과 브라우저가 대신 하는 일, 조건부로만 보이는 버튼·링크, 처리하는 곳이 없는 링크 | `입력란 title: maxlength=30 (그 이상은 입력되지 않음)` | 화면 |
+| `js` | 요소별 이벤트와 처리 함수가 바꾸는 것, 파일이 addEventListener로 붙이는 이벤트 종류(blur·focusout·submit이 없으면 명시), 라이브러리에 넘기는 설정 객체(AG Grid 옵션 등), 그 JS를 불러오는 템플릿 | `#title input 이벤트 → update: saveButton.disabled = !titleInput.value.trim()`, `gridOptions을(를) agGrid.createGrid에 넘기는 설정: pagination=true, paginationPageSize=10, …` | 화면 |
+| `html` | 입력란 제약과 인라인 이벤트 속성(onfocus 등), 모든 버튼·링크(라벨 → 이동·폼 제출, 표시 조건, 확인 창 유무, th:text면 "자리표시"), 조건이 붙은 문구(th:if·th:unless), 처리하는 곳이 없는 링크 | `입력란 dueDate: type=text, 포커스를 받으면 type=date로 바뀜`, `링크 '취소': 누르면 GET /qna로 이동, 확인 창 없음`, `문구 '등록된 질문이 없습니다.': th:unless="${hasQna}" 아닐 때만 보임` | 화면 |
 | `unused` | 어디서도 부르지 않는 경로, 어떤 컨트롤러도 반환하지 않는 템플릿 | `POST /qna/check: … 어디에서도 이 주소를 부르지 않음 (미사용 후보)` | 화면 (못 붙으면 common) |
 
 사실은 "어느 코드를 봐야 하는지"를 알려 주는 용도다. ③ 프롬프트는 근거를 반드시 실제 코드 줄로 인용하고, 분석 결과와 코드가 다르면 코드를 따르게 되어 있다.
@@ -173,12 +174,12 @@ verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으�
 | `codebase.py` | ③과 같은 파일 목록 읽기 |
 | `facts.py` | 사실 모양, ③ 코드 묶음 안인지 검사, 파일 쓰기 |
 | `cli.py`, `__main__.py` | 실행 (`python -m code_analysis`) |
-| `tests/` | 테스트와 가상의 앱(`fixtures/qna-app`, 기업 코드 아님), 그 앱의 분석기 결과(`fixtures/qna-backend-analysis.json`) |
+| `tests/` | 테스트와 가상의 앱(`fixtures/qna-app`, 기업 코드 아님), 그 앱의 분석기 결과(`fixtures/qna-backend-analysis.json`), 화면 나누기용 가상 requirements(`fixtures/qna-requirements.json`) |
 
 ## 테스트
 
 ```bash
-python -m pytest code_analysis/tests -q        # 22 passed, 1 skipped (분석기 jar를 빌드하면 23 passed)
+python -m pytest code_analysis/tests -q        # 26 passed, 1 skipped (분석기 jar를 빌드하면 27 passed)
 ```
 
 API 키도 기업 코드도 JDK도 필요 없다. 백엔드 분석 결과는 가상의 앱에 실제 분석기를 돌려 저장해 둔 `fixtures/qna-backend-analysis.json`을 쓴다.

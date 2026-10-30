@@ -119,8 +119,25 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-def verify_evidence(cb: Codebase, evidence: list[dict]) -> list[str]:
-    """LLM이 근거로 댄 "파일:줄"에 정말 그 코드가 있는지 본다. 문제 목록을 돌려준다(없으면 빈 목록)."""
+EVIDENCE_LINE_TOLERANCE = 2      # 적은 줄에 없을 때 위아래로 찾아볼 줄 수
+
+
+def _quote_matches(lines: list[str], line: int, quoted: list[str]) -> bool:
+    """line번째 줄부터 인용한 줄들이 차례로 들어 있는지 (공백 차이는 무시)."""
+    if not 1 <= line <= len(lines):
+        return False
+    actual = lines[line - 1: line - 1 + len(quoted)]
+    return len(actual) == len(quoted) and all(q in _norm(a) for q, a in zip(quoted, actual))
+
+
+def verify_evidence(cb: Codebase, evidence: list[dict], fixes: list[str] | None = None,
+                    tolerance: int = EVIDENCE_LINE_TOLERANCE) -> list[str]:
+    """LLM이 근거로 댄 "파일:줄"에 정말 그 코드가 있는지 본다. 문제 목록을 돌려준다(없으면 빈 목록).
+
+    적은 줄에는 없지만 위아래 tolerance줄 안에 같은 코드가 있으면 지어낸 근거가 아니라 줄 번호를 잘못 센 것으로 본다
+    (애노테이션 줄과 메서드 선언 줄을 헷갈리는 경우가 대부분이었다). 이때는 문제로 치지 않고 근거의 line을 고친다.
+    원래 적은 번호는 line_reported에 남기고, fixes를 주면 고친 내용을 거기에 적는다.
+    """
     problems = []
     for ev in evidence or []:
         if not isinstance(ev, dict):
@@ -131,16 +148,22 @@ def verify_evidence(cb: Codebase, evidence: list[dict]) -> list[str]:
             problems.append(f"{f}: 없는 파일")
             continue
         lines = cb.files[f]
-        if not isinstance(line, int) or not 1 <= line <= len(lines):
+        if not isinstance(line, int) or not 1 - tolerance <= line <= len(lines) + tolerance:
             problems.append(f"{f}:{line}: 줄 번호가 범위 밖")
             continue
         if not code:
             problems.append(f"{f}:{line}: 인용한 코드가 없음")
             continue
         quoted = [q for q in (_norm(x) for x in str(code).splitlines()) if q]
-        actual = lines[line - 1: line - 1 + len(quoted)]
-        if len(actual) < len(quoted) or any(q not in _norm(a) for q, a in zip(quoted, actual)):
-            problems.append(f"{f}:{line}: 인용한 코드가 실제 줄과 다름")
+        if _quote_matches(lines, line, quoted):
+            continue
+        near = [n for d in range(1, tolerance + 1) for n in (line - d, line + d) if _quote_matches(lines, n, quoted)]
+        if near:
+            ev["line_reported"], ev["line"] = line, near[0]
+            if fixes is not None:
+                fixes.append(f"{f}:{line} → {near[0]}줄 (줄 번호 보정)")
+            continue
+        problems.append(f"{f}:{line}: 인용한 코드가 실제 줄과 다름")
     return problems
 
 

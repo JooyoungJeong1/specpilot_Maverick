@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>질문 목록</title></head>
+<head>
+  <title>질문 목록</title>
+  <script th:src="@{/js/qna-list.js}"></script>
+</head>
 <body>
 <h1>질문 목록</h1>
 <a th:href="@{/qna/new}">질문하기</a>
+<div id="qnaGrid"></div>
+<p th:unless="${hasQna}">등록된 질문이 없습니다.</p>
+<a th:if="${hasQna}" th:href="@{/qna}" th:text="${latestTitle}">최근 질문 제목</a>
 </body>
 </html>

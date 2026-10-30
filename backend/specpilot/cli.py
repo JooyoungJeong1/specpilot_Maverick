@@ -234,7 +234,8 @@ def cmd_judge(args) -> int:
         s = report["summary"]
         print(f"\n[③ 결과] 단위 {s['units_judged']}개 판정 (판정 안 된 단위 {s['units_not_judged']}개): {s['by_status']}")
         print(f"  기획서 항목별: {s['items_by_status']}")
-        print(f"  근거 불일치 {s['evidence_failures']} · 띄어쓰기만 달라 구현 처리 {s.get('spacing_only', 0)} · 판정 갈림(덜 쪼갠 신호) {s['split_issues']} · "
+        print(f"  근거 불일치 {s['evidence_failures']} · 근거 줄 번호 보정 {s.get('evidence_line_fixes', 0)} · "
+              f"띄어쓰기만 달라 구현 처리 {s.get('spacing_only', 0)} · 판정 갈림(덜 쪼갠 신호) {s['split_issues']} · "
               f"합칠 후보(너무 쪼갠 신호) {s['merge_candidates']} · 기획서에 없는 구현 {s['extras']}")
         print("  자세한 내용: judge_report.json, judgments.json")
     return 0

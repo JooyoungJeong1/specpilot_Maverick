@@ -39,3 +39,20 @@ def test_directory_api_keeps_verification2_shape(tmp_path):
     (tmp_path / "a.js").write_text(JS, encoding="utf-8")
     agg = af.analyze_js_directory(tmp_path)
     assert agg["files"] == ["a.js"] and all(x["file"] == "a.js" for x in agg["selectors"])
+
+
+def test_library_config_objects():
+    js = """
+const cols = [{ headerName: "번호", field: "no" }, { headerName: "제목", field: "title" }];
+const gridOptions = { columnDefs: cols, pagination: true, paginationPageSize: 25,
+                      paginationPageSizeSelector: [25, 50, 100], defaultColDef: { sortable: true } };
+agGrid.createGrid(document.querySelector("#grid"), gridOptions);
+new Chart(ctx, { type: "bar", data: [] });
+fetch("/api/x", { method: "POST", body: "" });
+"""
+    cfgs = af.parse_js_source("a.js", js)["lib_configs"]
+    by = {c["callee"]: c for c in cfgs}
+    assert set(by) == {"agGrid.createGrid", "Chart"}                       # fetch 옵션은 설정 객체로 보지 않음
+    g = by["agGrid.createGrid"]
+    assert g["var"] == "gridOptions" and "pagination=true" in g["props"] and "paginationPageSizeSelector=[25, 50, 100]" in g["props"]
+    assert "columnDefs=객체 2개 (headerName: 번호, 제목)" in g["props"] and "defaultColDef.sortable=true" in g["props"]

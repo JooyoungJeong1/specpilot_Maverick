@@ -90,7 +90,15 @@ def test_verify_evidence(code_root):
     f = "src/main/java/demo/AuthController.java"
     assert code_prep.verify_evidence(cb, [{"file": f, "line": 3, "code": '@GetMapping("/login")'}]) == []
     assert code_prep.verify_evidence(cb, [{"file": f, "line": 3, "code": '  @GetMapping("/login")  '}]) == []  # 공백 차이는 허용
-    assert "실제 줄과 다름" in code_prep.verify_evidence(cb, [{"file": f, "line": 2, "code": '@GetMapping("/login")'}])[0]
+    # 위아래 2줄 안에 같은 코드가 있으면 줄 번호만 고치고 문제로 치지 않는다 (애노테이션·메서드 줄 혼동)
+    ev = {"file": f, "line": 2, "code": '@GetMapping("/login")'}
+    fixes = []
+    assert code_prep.verify_evidence(cb, [ev], fixes) == []
+    assert ev["line"] == 3 and ev["line_reported"] == 2 and "2 → 3줄" in fixes[0]
+    # 2줄 넘게 벗어나면 지어낸 근거로 본다
+    assert "실제 줄과 다름" in code_prep.verify_evidence(cb, [{"file": f, "line": 3, "code": "return \"없는 코드\";"}])[0]
+    assert "실제 줄과 다름" in code_prep.verify_evidence(cb, [{"file": f, "line": 2, "code": '@GetMapping("/login")'}],
+                                                       tolerance=0)[0]
     assert "없는 파일" in code_prep.verify_evidence(cb, [{"file": "Nope.java", "line": 1, "code": "x"}])[0]
     assert "범위 밖" in code_prep.verify_evidence(cb, [{"file": f, "line": 99, "code": "x"}])[0]
 
@@ -144,7 +152,7 @@ def test_judge_screen_downgrades_fake_evidence(run_dir, code_root):
         "screen_id": "LOGIN-001",
         "results": [
             {"unit_id": "REQ-LOGIN-001-01", "status": "구현", "mismatch": [], "note": None, "split_issue": None,
-             "evidence": [{"file": tpl, "line": 2, "code": '<button id="google">Google로 계속하기</button>'}]},
+             "evidence": [{"file": tpl, "line": 3, "code": '<button id="google">Google로 계속하기</button>'}]},  # 실제는 2줄
             {"unit_id": "REQ-LOGIN-001-02", "status": "불일치", "note": None,
              "mismatch": [{"field": "message", "spec": "다시 확인해 주세요.", "code": "다시 시도해주세요."}],
              "split_issue": "문구는 불일치, 표시 위치는 확인필요",
@@ -155,9 +163,12 @@ def test_judge_screen_downgrades_fake_evidence(run_dir, code_root):
     # 첫 응답은 REQ-APP-01 판정이 빠져 재시도, 두 번째도 같으면 빠진 단위를 확인필요로 채움
     c = ctx_for(run_dir, [json.dumps(response, ensure_ascii=False)] * 2)
     meta = judge_screen(c, cb, "LOGIN-001", us, None)
-    assert meta["attempts"] == 2 and meta["evidence_failures"] == 1
+    assert meta["attempts"] == 2 and meta["evidence_failures"] == 1 and meta["evidence_line_fixes"] == 1
     saved = {r["unit_id"]: r for r in json.loads((run_dir / "judge/LOGIN-001.json").read_text(encoding="utf-8"))["results"]}
-    assert saved["REQ-LOGIN-001-01"]["status"] == "구현"
+    # 줄 번호만 1줄 틀린 근거는 판정을 유지하고 줄 번호를 고친다
+    r1 = saved["REQ-LOGIN-001-01"]
+    assert r1["status"] == "구현" and r1["evidence_ok"] and "original_status" not in r1
+    assert r1["evidence"][0]["line"] == 2 and r1["evidence"][0]["line_reported"] == 3 and len(r1["evidence_fixes"]) == 1
     assert saved["REQ-LOGIN-001-02"]["status"] == "확인필요" and saved["REQ-LOGIN-001-02"]["original_status"] == "불일치"
     assert saved["REQ-APP-01"]["status"] == "확인필요" and "판정 누락" in saved["REQ-APP-01"]["note"]
     # 코드 묶음은 캐시 블록으로 먼저 들어간다
@@ -167,6 +178,7 @@ def test_judge_screen_downgrades_fake_evidence(run_dir, code_root):
     report = merge_judgments(run_dir)
     assert report["summary"]["split_issues"] == 1
     assert report["summary"]["evidence_failures"] == 1
+    assert report["summary"]["evidence_line_fixes"] == 1
 
 
 def test_merge_candidates_flags_too_fine_split():

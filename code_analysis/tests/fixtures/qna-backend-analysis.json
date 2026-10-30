@@ -1,0 +1,1839 @@
+{
+ "tool": "specpilot-analyzer 0.8.1",
+ "java_files": 11,
+ "templates_found": 3,
+ "library_jars": 0,
+ "source_roots": [
+  "src/main/java"
+ ],
+ "notes": [
+  "라이브러리 jar 없이 해석함: Spring·JPA에서 상속받은 메서드는 unresolved로 나올 수 있음"
+ ],
+ "parse_errors": [],
+ "classes": [
+  {
+   "name": "NotifyService",
+   "qualified": "demo.service.NotifyService",
+   "kind": "interface",
+   "file": "src/main/java/demo/service/NotifyService.java",
+   "line": 3,
+   "annotations": [],
+   "extends": [],
+   "implements": [],
+   "fields": [],
+   "methods": [
+    {
+     "name": "send",
+     "line": 4,
+     "ann_line": 4,
+     "annotations": [],
+     "params": [
+      {
+       "name": "to",
+       "type": "String",
+       "annotations": []
+      }
+     ],
+     "return_type": "void",
+     "has_body": false,
+     "returns": [],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "QnaController",
+   "qualified": "demo.controller.QnaController",
+   "kind": "class",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 8,
+   "annotations": [
+    {
+     "name": "Controller",
+     "line": 6,
+     "values": [],
+     "pairs": {}
+    },
+    {
+     "name": "RequestMapping",
+     "line": 7,
+     "values": [
+      "/qna"
+     ],
+     "pairs": {}
+    }
+   ],
+   "extends": [],
+   "implements": [],
+   "fields": [
+    {
+     "name": "qnaService",
+     "type": "QnaService",
+     "line": 9,
+     "annotations": []
+    }
+   ],
+   "methods": [
+    {
+     "name": "form",
+     "line": 16,
+     "ann_line": 15,
+     "annotations": [
+      {
+       "name": "GetMapping",
+       "line": 15,
+       "values": [
+        "/new"
+       ],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "model",
+       "type": "Model",
+       "annotations": []
+      }
+     ],
+     "return_type": "String",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "view",
+       "value": "qna/write",
+       "context": "정상 흐름",
+       "line": 18
+      }
+     ],
+     "model_attrs": [
+      {
+       "name": "qnaForm",
+       "line": 17,
+       "context": "정상 흐름",
+       "flash": false
+      }
+     ],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    },
+    {
+     "name": "create",
+     "line": 22,
+     "ann_line": 21,
+     "annotations": [
+      {
+       "name": "PostMapping",
+       "line": 21,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "qnaForm",
+       "type": "QnaForm",
+       "annotations": [
+        {
+         "name": "Valid",
+         "line": 22,
+         "values": [],
+         "pairs": {}
+        },
+        {
+         "name": "ModelAttribute",
+         "line": 22,
+         "values": [],
+         "pairs": {}
+        }
+       ]
+      },
+      {
+       "name": "bindingResult",
+       "type": "BindingResult",
+       "annotations": []
+      },
+      {
+       "name": "model",
+       "type": "Model",
+       "annotations": []
+      }
+     ],
+     "return_type": "String",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "view",
+       "value": "qna/write",
+       "context": "입력값 검사 실패 시",
+       "line": 24
+      },
+      {
+       "kind": "redirect",
+       "value": "/qna",
+       "context": "정상 흐름",
+       "line": 28
+      },
+      {
+       "kind": "view",
+       "value": "qna/write",
+       "context": "예외(IllegalArgumentException) 시",
+       "line": 31
+      }
+     ],
+     "model_attrs": [
+      {
+       "name": "errorMessage",
+       "line": 30,
+       "context": "예외(IllegalArgumentException) 시",
+       "flash": false
+      }
+     ],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": 23
+    },
+    {
+     "name": "list",
+     "line": 36,
+     "ann_line": 35,
+     "annotations": [
+      {
+       "name": "GetMapping",
+       "line": 35,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [],
+     "return_type": "String",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "view",
+       "value": "qna/list",
+       "context": "정상 흐름",
+       "line": 37
+      }
+     ],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    },
+    {
+     "name": "check",
+     "line": 42,
+     "ann_line": 40,
+     "annotations": [
+      {
+       "name": "PostMapping",
+       "line": 40,
+       "values": [
+        "/check"
+       ],
+       "pairs": {}
+      },
+      {
+       "name": "ResponseBody",
+       "line": 41,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "title",
+       "type": "String",
+       "annotations": [
+        {
+         "name": "RequestParam",
+         "line": 42,
+         "values": [
+          "title"
+         ],
+         "pairs": {}
+        }
+       ]
+      }
+     ],
+     "return_type": "boolean",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "body",
+       "value": "true",
+       "context": "정상 흐름",
+       "line": 43
+      }
+     ],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "Qna",
+   "qualified": "demo.entity.Qna",
+   "kind": "class",
+   "file": "src/main/java/demo/entity/Qna.java",
+   "line": 5,
+   "annotations": [],
+   "extends": [],
+   "implements": [],
+   "fields": [
+    {
+     "name": "id",
+     "type": "Long",
+     "line": 6,
+     "annotations": []
+    }
+   ],
+   "methods": [
+    {
+     "name": "getId",
+     "line": 11,
+     "ann_line": 11,
+     "annotations": [],
+     "params": [],
+     "return_type": "Long",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "body",
+       "value": "id",
+       "context": "정상 흐름",
+       "line": 12
+      }
+     ],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "AdminQnaController",
+   "qualified": "demo.controller.AdminQnaController",
+   "kind": "class",
+   "file": "src/main/java/demo/controller/AdminQnaController.java",
+   "line": 4,
+   "annotations": [
+    {
+     "name": "Controller",
+     "line": 3,
+     "values": [],
+     "pairs": {}
+    }
+   ],
+   "extends": [
+    "BaseController"
+   ],
+   "implements": [],
+   "fields": [],
+   "methods": [
+    {
+     "name": "close",
+     "line": 7,
+     "ann_line": 6,
+     "annotations": [
+      {
+       "name": "PostMapping",
+       "line": 6,
+       "values": [
+        "/admin/qna/{id}/close"
+       ],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "id",
+       "type": "Long",
+       "annotations": [
+        {
+         "name": "PathVariable",
+         "line": 7,
+         "values": [],
+         "pairs": {}
+        }
+       ]
+      }
+     ],
+     "return_type": "String",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "redirect",
+       "value": "/qna",
+       "context": "정상 흐름",
+       "line": 9
+      }
+     ],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "QnaRepository",
+   "qualified": "demo.repository.QnaRepository",
+   "kind": "interface",
+   "file": "src/main/java/demo/repository/QnaRepository.java",
+   "line": 5,
+   "annotations": [],
+   "extends": [
+    "JpaRepository"
+   ],
+   "implements": [],
+   "fields": [],
+   "methods": [
+    {
+     "name": "existsByTitle",
+     "line": 6,
+     "ann_line": 6,
+     "annotations": [],
+     "params": [
+      {
+       "name": "title",
+       "type": "String",
+       "annotations": []
+      }
+     ],
+     "return_type": "boolean",
+     "has_body": false,
+     "returns": [],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "MailNotifyService",
+   "qualified": "demo.service.MailNotifyService",
+   "kind": "class",
+   "file": "src/main/java/demo/service/MailNotifyService.java",
+   "line": 4,
+   "annotations": [
+    {
+     "name": "Service",
+     "line": 3,
+     "values": [],
+     "pairs": {}
+    }
+   ],
+   "extends": [],
+   "implements": [
+    "NotifyService"
+   ],
+   "fields": [],
+   "methods": [
+    {
+     "name": "send",
+     "line": 6,
+     "ann_line": 5,
+     "annotations": [
+      {
+       "name": "Override",
+       "line": 5,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "to",
+       "type": "String",
+       "annotations": []
+      }
+     ],
+     "return_type": "void",
+     "has_body": true,
+     "returns": [],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "QnaService",
+   "qualified": "demo.service.QnaService",
+   "kind": "class",
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 8,
+   "annotations": [
+    {
+     "name": "Service",
+     "line": 7,
+     "values": [],
+     "pairs": {}
+    }
+   ],
+   "extends": [],
+   "implements": [],
+   "fields": [
+    {
+     "name": "qnaRepository",
+     "type": "QnaRepository",
+     "line": 9,
+     "annotations": []
+    },
+    {
+     "name": "notifyService",
+     "type": "NotifyService",
+     "line": 10,
+     "annotations": []
+    }
+   ],
+   "methods": [
+    {
+     "name": "create",
+     "line": 17,
+     "ann_line": 17,
+     "annotations": [],
+     "params": [
+      {
+       "name": "form",
+       "type": "QnaForm",
+       "annotations": []
+      }
+     ],
+     "return_type": "Long",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "body",
+       "value": "qnaRepository.save(new Qna(form)).getId()",
+       "context": "정상 흐름",
+       "line": 22
+      }
+     ],
+     "model_attrs": [],
+     "throws": [
+      {
+       "exception": "IllegalArgumentException",
+       "message": "이미 있는 제목입니다.",
+       "line": 19,
+       "context": "qnaRepository.existsByTitle(form.getTitle()) 일 때"
+      }
+     ],
+     "rejects": [],
+     "has_errors_line": null
+    },
+    {
+     "name": "close",
+     "line": 25,
+     "ann_line": 25,
+     "annotations": [],
+     "params": [
+      {
+       "name": "id",
+       "type": "Long",
+       "annotations": []
+      }
+     ],
+     "return_type": "void",
+     "has_body": true,
+     "returns": [],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "QnaForm",
+   "qualified": "demo.dto.QnaForm",
+   "kind": "class",
+   "file": "src/main/java/demo/dto/QnaForm.java",
+   "line": 3,
+   "annotations": [],
+   "extends": [],
+   "implements": [],
+   "fields": [
+    {
+     "name": "title",
+     "type": "String",
+     "line": 6,
+     "annotations": [
+      {
+       "name": "NotBlank",
+       "line": 4,
+       "values": [],
+       "pairs": {
+        "message": "제목을 입력하세요"
+       }
+      },
+      {
+       "name": "Size",
+       "line": 5,
+       "values": [],
+       "pairs": {
+        "max": "30",
+        "message": "제목은 30자까지"
+       }
+      }
+     ]
+    },
+    {
+     "name": "content",
+     "type": "String",
+     "line": 8,
+     "annotations": []
+    }
+   ],
+   "methods": []
+  },
+  {
+   "name": "SmsNotifyService",
+   "qualified": "demo.service.SmsNotifyService",
+   "kind": "class",
+   "file": "src/main/java/demo/service/SmsNotifyService.java",
+   "line": 4,
+   "annotations": [
+    {
+     "name": "Service",
+     "line": 3,
+     "values": [],
+     "pairs": {}
+    }
+   ],
+   "extends": [],
+   "implements": [
+    "NotifyService"
+   ],
+   "fields": [],
+   "methods": [
+    {
+     "name": "send",
+     "line": 6,
+     "ann_line": 5,
+     "annotations": [
+      {
+       "name": "Override",
+       "line": 5,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "to",
+       "type": "String",
+       "annotations": []
+      }
+     ],
+     "return_type": "void",
+     "has_body": true,
+     "returns": [],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  },
+  {
+   "name": "BaseController",
+   "qualified": "demo.controller.BaseController",
+   "kind": "class",
+   "file": "src/main/java/demo/controller/BaseController.java",
+   "line": 5,
+   "annotations": [],
+   "extends": [],
+   "implements": [],
+   "fields": [
+    {
+     "name": "qnaService",
+     "type": "QnaService",
+     "line": 7,
+     "annotations": [
+      {
+       "name": "Autowired",
+       "line": 6,
+       "values": [],
+       "pairs": {}
+      }
+     ]
+    }
+   ],
+   "methods": []
+  },
+  {
+   "name": "SecurityConfig",
+   "qualified": "demo.config.SecurityConfig",
+   "kind": "class",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 4,
+   "annotations": [
+    {
+     "name": "Configuration",
+     "line": 3,
+     "values": [],
+     "pairs": {}
+    }
+   ],
+   "extends": [],
+   "implements": [],
+   "fields": [],
+   "methods": [
+    {
+     "name": "filterChain",
+     "line": 6,
+     "ann_line": 5,
+     "annotations": [
+      {
+       "name": "Bean",
+       "line": 5,
+       "values": [],
+       "pairs": {}
+      }
+     ],
+     "params": [
+      {
+       "name": "http",
+       "type": "HttpSecurity",
+       "annotations": []
+      }
+     ],
+     "return_type": "SecurityFilterChain",
+     "has_body": true,
+     "returns": [
+      {
+       "kind": "body",
+       "value": "http.build()",
+       "context": "정상 흐름",
+       "line": 17
+      }
+     ],
+     "model_attrs": [],
+     "throws": [],
+     "rejects": [],
+     "has_errors_line": null
+    }
+   ]
+  }
+ ],
+ "call_stats": {
+  "interface_normal": 1,
+  "resolved": 5,
+  "unresolved": 20
+ },
+ "calls": [
+  {
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 17,
+   "name": "addAttribute",
+   "index": 0,
+   "receiver": "model",
+   "args": 2,
+   "caller_class": "QnaController",
+   "caller_method": "form",
+   "caller_line": 16,
+   "context": "정상 흐름",
+   "first_string": "qnaForm",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 23,
+   "name": "hasErrors",
+   "index": 0,
+   "receiver": "bindingResult",
+   "args": 0,
+   "caller_class": "QnaController",
+   "caller_method": "create",
+   "caller_line": 22,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 27,
+   "name": "create",
+   "index": 0,
+   "receiver": "qnaService",
+   "args": 1,
+   "caller_class": "QnaController",
+   "caller_method": "create",
+   "caller_line": 22,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaService",
+   "resolved": true,
+   "declaring_type": "QnaService",
+   "declaring_qualified": "demo.service.QnaService",
+   "declaring_kind": "class",
+   "signature": "demo.service.QnaService.create(demo.dto.QnaForm)",
+   "decl_file": "src/main/java/demo/service/QnaService.java",
+   "decl_line": 17,
+   "impls": [],
+   "note": "resolved"
+  },
+  {
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 30,
+   "name": "addAttribute",
+   "index": 0,
+   "receiver": "model",
+   "args": 2,
+   "caller_class": "QnaController",
+   "caller_method": "create",
+   "caller_line": 22,
+   "context": "예외(IllegalArgumentException) 시",
+   "first_string": "errorMessage",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 30,
+   "name": "getMessage",
+   "index": 0,
+   "receiver": "e",
+   "args": 0,
+   "caller_class": "QnaController",
+   "caller_method": "create",
+   "caller_line": 22,
+   "context": "예외(IllegalArgumentException) 시",
+   "first_string": null,
+   "receiver_type": "IllegalArgumentException",
+   "resolved": true,
+   "declaring_type": "Throwable",
+   "declaring_qualified": "java.lang.Throwable",
+   "declaring_kind": "class",
+   "signature": "java.lang.Throwable.getMessage()",
+   "decl_file": null,
+   "decl_line": null,
+   "impls": [],
+   "note": "resolved"
+  },
+  {
+   "file": "src/main/java/demo/controller/AdminQnaController.java",
+   "line": 8,
+   "name": "close",
+   "index": 0,
+   "receiver": "qnaService",
+   "args": 1,
+   "caller_class": "AdminQnaController",
+   "caller_method": "close",
+   "caller_line": 7,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaService",
+   "resolved": true,
+   "declaring_type": "QnaService",
+   "declaring_qualified": "demo.service.QnaService",
+   "declaring_kind": "class",
+   "signature": "demo.service.QnaService.close(java.lang.Long)",
+   "decl_file": "src/main/java/demo/service/QnaService.java",
+   "decl_line": 25,
+   "impls": [],
+   "note": "resolved"
+  },
+  {
+   "file": "src/main/java/demo/service/MailNotifyService.java",
+   "line": 7,
+   "name": "println",
+   "index": 0,
+   "receiver": "System.out",
+   "args": 1,
+   "caller_class": "MailNotifyService",
+   "caller_method": "send",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "PrintStream",
+   "resolved": true,
+   "declaring_type": "PrintStream",
+   "declaring_qualified": "java.io.PrintStream",
+   "declaring_kind": "class",
+   "signature": "java.io.PrintStream.println(java.lang.String)",
+   "decl_file": null,
+   "decl_line": null,
+   "impls": [],
+   "note": "resolved"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 18,
+   "name": "existsByTitle",
+   "index": 0,
+   "receiver": "qnaRepository",
+   "args": 1,
+   "caller_class": "QnaService",
+   "caller_method": "create",
+   "caller_line": 17,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaRepository",
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 18,
+   "name": "getTitle",
+   "index": 0,
+   "receiver": "form",
+   "args": 0,
+   "caller_class": "QnaService",
+   "caller_method": "create",
+   "caller_line": 17,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaForm",
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 21,
+   "name": "send",
+   "index": 0,
+   "receiver": "notifyService",
+   "args": 1,
+   "caller_class": "QnaService",
+   "caller_method": "create",
+   "caller_line": 17,
+   "context": "정상 흐름",
+   "first_string": "admin",
+   "receiver_type": "NotifyService",
+   "resolved": true,
+   "declaring_type": "NotifyService",
+   "declaring_qualified": "demo.service.NotifyService",
+   "declaring_kind": "interface",
+   "signature": "demo.service.NotifyService.send(java.lang.String)",
+   "decl_file": "src/main/java/demo/service/NotifyService.java",
+   "decl_line": 4,
+   "impls": [
+    {
+     "file": "src/main/java/demo/service/MailNotifyService.java",
+     "line": 6,
+     "type": "MailNotifyService"
+    },
+    {
+     "file": "src/main/java/demo/service/SmsNotifyService.java",
+     "line": 6,
+     "type": "SmsNotifyService"
+    }
+   ],
+   "note": "interface_normal"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 22,
+   "name": "getId",
+   "index": 0,
+   "receiver": "qnaRepository.save(new Qna(form))",
+   "args": 0,
+   "caller_class": "QnaService",
+   "caller_method": "create",
+   "caller_line": 17,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 22,
+   "name": "save",
+   "index": 0,
+   "receiver": "qnaRepository",
+   "args": 1,
+   "caller_class": "QnaService",
+   "caller_method": "create",
+   "caller_line": 17,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaRepository",
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/service/QnaService.java",
+   "line": 26,
+   "name": "deleteById",
+   "index": 0,
+   "receiver": "qnaRepository",
+   "args": 1,
+   "caller_class": "QnaService",
+   "caller_method": "close",
+   "caller_line": 25,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "QnaRepository",
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/service/SmsNotifyService.java",
+   "line": 7,
+   "name": "println",
+   "index": 0,
+   "receiver": "System.out",
+   "args": 1,
+   "caller_class": "SmsNotifyService",
+   "caller_method": "send",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": "PrintStream",
+   "resolved": true,
+   "declaring_type": "PrintStream",
+   "declaring_qualified": "java.io.PrintStream",
+   "declaring_kind": "class",
+   "signature": "java.io.PrintStream.println(java.lang.String)",
+   "decl_file": null,
+   "decl_line": null,
+   "impls": [],
+   "note": "resolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 12,
+   "name": "formLogin",
+   "index": 0,
+   "receiver": "http.authorizeHttpRequests(auth -> auth.requestMatchers(\"/login\", \"/css/**\").permitAll().requestMatchers(\"/qna/*/delete\").hasRole(\"ADMIN\").anyRequest().authenticated())",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 7,
+   "name": "authorizeHttpRequests",
+   "index": 0,
+   "receiver": "http",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 11,
+   "name": "authenticated",
+   "index": 0,
+   "receiver": "auth.requestMatchers(\"/login\", \"/css/**\").permitAll().requestMatchers(\"/qna/*/delete\").hasRole(\"ADMIN\").anyRequest()",
+   "args": 0,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 11,
+   "name": "anyRequest",
+   "index": 0,
+   "receiver": "auth.requestMatchers(\"/login\", \"/css/**\").permitAll().requestMatchers(\"/qna/*/delete\").hasRole(\"ADMIN\")",
+   "args": 0,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 10,
+   "name": "hasRole",
+   "index": 0,
+   "receiver": "auth.requestMatchers(\"/login\", \"/css/**\").permitAll().requestMatchers(\"/qna/*/delete\")",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "ADMIN",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 9,
+   "name": "requestMatchers",
+   "index": 0,
+   "receiver": "auth.requestMatchers(\"/login\", \"/css/**\").permitAll()",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "/qna/*/delete",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 8,
+   "name": "permitAll",
+   "index": 0,
+   "receiver": "auth.requestMatchers(\"/login\", \"/css/**\")",
+   "args": 0,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 8,
+   "name": "requestMatchers",
+   "index": 0,
+   "receiver": "auth",
+   "args": 2,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "/login",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 15,
+   "name": "defaultSuccessUrl",
+   "index": 0,
+   "receiver": "form.loginPage(\"/login\").usernameParameter(\"email\")",
+   "args": 2,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "/qna",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 14,
+   "name": "usernameParameter",
+   "index": 0,
+   "receiver": "form.loginPage(\"/login\")",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "email",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 13,
+   "name": "loginPage",
+   "index": 0,
+   "receiver": "form",
+   "args": 1,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": "/login",
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  },
+  {
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 17,
+   "name": "build",
+   "index": 0,
+   "receiver": "http",
+   "args": 0,
+   "caller_class": "SecurityConfig",
+   "caller_method": "filterChain",
+   "caller_line": 6,
+   "context": "정상 흐름",
+   "first_string": null,
+   "receiver_type": null,
+   "resolved": false,
+   "error": "UnsolvedSymbolException",
+   "note": "unresolved"
+  }
+ ],
+ "routes": [
+  {
+   "controller": "QnaController",
+   "method": "form",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 15,
+   "method_line": 16,
+   "http": "GET",
+   "paths": [
+    "/qna/new"
+   ],
+   "json": false,
+   "valid_params": [],
+   "form_params": [],
+   "request_params": [],
+   "binding_result": false,
+   "returns": [
+    {
+     "kind": "view",
+     "value": "qna/write",
+     "context": "정상 흐름",
+     "line": 18
+    }
+   ],
+   "has_errors_line": null,
+   "rejects": [],
+   "attrs": [
+    {
+     "name": "qnaForm",
+     "line": 17,
+     "file": "src/main/java/demo/controller/QnaController.java",
+     "context": "정상 흐름",
+     "via": null,
+     "flash": false,
+     "implicit": false
+    }
+   ],
+   "helpers": []
+  },
+  {
+   "controller": "QnaController",
+   "method": "create",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 21,
+   "method_line": 22,
+   "http": "POST",
+   "paths": [
+    "/qna"
+   ],
+   "json": false,
+   "valid_params": [
+    "QnaForm"
+   ],
+   "form_params": [
+    "QnaForm"
+   ],
+   "request_params": [],
+   "binding_result": true,
+   "returns": [
+    {
+     "kind": "view",
+     "value": "qna/write",
+     "context": "입력값 검사 실패 시",
+     "line": 24
+    },
+    {
+     "kind": "redirect",
+     "value": "/qna",
+     "context": "정상 흐름",
+     "line": 28
+    },
+    {
+     "kind": "view",
+     "value": "qna/write",
+     "context": "예외(IllegalArgumentException) 시",
+     "line": 31
+    }
+   ],
+   "has_errors_line": 23,
+   "rejects": [],
+   "attrs": [
+    {
+     "name": "qnaForm",
+     "line": 22,
+     "file": "src/main/java/demo/controller/QnaController.java",
+     "context": "요청마다",
+     "via": null,
+     "flash": false,
+     "implicit": true
+    },
+    {
+     "name": "errorMessage",
+     "line": 30,
+     "file": "src/main/java/demo/controller/QnaController.java",
+     "context": "예외(IllegalArgumentException) 시",
+     "via": null,
+     "flash": false,
+     "implicit": false
+    }
+   ],
+   "helpers": []
+  },
+  {
+   "controller": "QnaController",
+   "method": "list",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 35,
+   "method_line": 36,
+   "http": "GET",
+   "paths": [
+    "/qna"
+   ],
+   "json": false,
+   "valid_params": [],
+   "form_params": [],
+   "request_params": [],
+   "binding_result": false,
+   "returns": [
+    {
+     "kind": "view",
+     "value": "qna/list",
+     "context": "정상 흐름",
+     "line": 37
+    }
+   ],
+   "has_errors_line": null,
+   "rejects": [],
+   "attrs": [],
+   "helpers": []
+  },
+  {
+   "controller": "QnaController",
+   "method": "check",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 40,
+   "method_line": 42,
+   "http": "POST",
+   "paths": [
+    "/qna/check"
+   ],
+   "json": true,
+   "valid_params": [],
+   "form_params": [],
+   "request_params": [
+    "title"
+   ],
+   "binding_result": false,
+   "returns": [
+    {
+     "kind": "body",
+     "value": "true",
+     "context": "정상 흐름",
+     "line": 43
+    }
+   ],
+   "has_errors_line": null,
+   "rejects": [],
+   "attrs": [],
+   "helpers": []
+  },
+  {
+   "controller": "AdminQnaController",
+   "method": "close",
+   "file": "src/main/java/demo/controller/AdminQnaController.java",
+   "line": 6,
+   "method_line": 7,
+   "http": "POST",
+   "paths": [
+    "/admin/qna/{id}/close"
+   ],
+   "json": false,
+   "valid_params": [],
+   "form_params": [],
+   "request_params": [
+    "id"
+   ],
+   "binding_result": false,
+   "returns": [
+    {
+     "kind": "redirect",
+     "value": "/qna",
+     "context": "정상 흐름",
+     "line": 9
+    }
+   ],
+   "has_errors_line": null,
+   "rejects": [],
+   "attrs": [],
+   "helpers": []
+  }
+ ],
+ "bindings": [
+  {
+   "route": "GET /qna/new",
+   "handler": "QnaController.form",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 17,
+   "context": "정상 흐름",
+   "view": "qna/write",
+   "kind": "model_attr",
+   "attr_name": "qnaForm",
+   "implicit": false,
+   "target_template": "src/main/resources/templates/qna/write.html",
+   "fragments": [],
+   "status": "confirmed",
+   "ref": {
+    "file": "src/main/resources/templates/qna/write.html",
+    "line": 10,
+    "expr": "${qnaForm}"
+   }
+  },
+  {
+   "route": "POST /qna",
+   "handler": "QnaController.create",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 22,
+   "context": "입력값 검사 실패 시",
+   "view": "qna/write",
+   "kind": "model_attr",
+   "attr_name": "qnaForm",
+   "implicit": true,
+   "target_template": "src/main/resources/templates/qna/write.html",
+   "fragments": [],
+   "status": "confirmed",
+   "ref": {
+    "file": "src/main/resources/templates/qna/write.html",
+    "line": 10,
+    "expr": "${qnaForm}"
+   }
+  },
+  {
+   "route": "POST /qna",
+   "handler": "QnaController.create",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 23,
+   "context": "입력값 검사 실패 시",
+   "view": "qna/write",
+   "kind": "validation_output",
+   "forms": [
+    "QnaForm"
+   ],
+   "target_template": "src/main/resources/templates/qna/write.html",
+   "fragments": [],
+   "error_outputs": [],
+   "rejects": []
+  },
+  {
+   "route": "POST /qna",
+   "handler": "QnaController.create",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 22,
+   "context": "예외(IllegalArgumentException) 시",
+   "view": "qna/write",
+   "kind": "model_attr",
+   "attr_name": "qnaForm",
+   "implicit": true,
+   "target_template": "src/main/resources/templates/qna/write.html",
+   "fragments": [],
+   "status": "confirmed",
+   "ref": {
+    "file": "src/main/resources/templates/qna/write.html",
+    "line": 10,
+    "expr": "${qnaForm}"
+   }
+  },
+  {
+   "route": "POST /qna",
+   "handler": "QnaController.create",
+   "file": "src/main/java/demo/controller/QnaController.java",
+   "line": 30,
+   "context": "예외(IllegalArgumentException) 시",
+   "view": "qna/write",
+   "kind": "model_attr",
+   "attr_name": "errorMessage",
+   "implicit": false,
+   "target_template": "src/main/resources/templates/qna/write.html",
+   "fragments": [],
+   "status": "mismatch",
+   "ref": null
+  }
+ ],
+ "security": [
+  {
+   "kind": "call",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 12,
+   "name": "formLogin",
+   "strings": [],
+   "args": [
+    "form -> form.loginPage(\"/login\").usernameParameter(\"email\")…"
+   ]
+  },
+  {
+   "kind": "call",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 7,
+   "name": "authorizeHttpRequests",
+   "strings": [],
+   "args": [
+    "auth -> auth.requestMatchers(\"/login\", \"/css/**\").permitAll…"
+   ]
+  },
+  {
+   "kind": "matcher",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 11,
+   "matcher": "anyRequest",
+   "methods": [],
+   "paths": [],
+   "rule": "authenticated",
+   "rule_args": []
+  },
+  {
+   "kind": "matcher",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 9,
+   "matcher": "requestMatchers",
+   "methods": [],
+   "paths": [
+    "/qna/*/delete"
+   ],
+   "rule": "hasRole",
+   "rule_args": [
+    "ADMIN"
+   ]
+  },
+  {
+   "kind": "matcher",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 8,
+   "matcher": "requestMatchers",
+   "methods": [],
+   "paths": [
+    "/login",
+    "/css/**"
+   ],
+   "rule": "permitAll",
+   "rule_args": []
+  },
+  {
+   "kind": "call",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 15,
+   "name": "defaultSuccessUrl",
+   "strings": [
+    "/qna"
+   ],
+   "args": [
+    "\"/qna\"",
+    "true"
+   ]
+  },
+  {
+   "kind": "call",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 14,
+   "name": "usernameParameter",
+   "strings": [
+    "email"
+   ],
+   "args": [
+    "\"email\""
+   ]
+  },
+  {
+   "kind": "call",
+   "file": "src/main/java/demo/config/SecurityConfig.java",
+   "line": 13,
+   "name": "loginPage",
+   "strings": [
+    "/login"
+   ],
+   "args": [
+    "\"/login\""
+   ]
+  }
+ ],
+ "templates": [
+  {
+   "file": "src/main/resources/templates/qna/list.html",
+   "view": "qna/list",
+   "title": "질문 목록",
+   "headings": [
+    "질문 목록"
+   ],
+   "provides_fragment": false,
+   "includes": [],
+   "scripts": [
+    {
+     "url": "@{/js/qna-list.js}",
+     "line": 5
+    }
+   ],
+   "refs": [
+    {
+     "name": "hasQna",
+     "line": 11,
+     "attr": "th:unless",
+     "expr": "${hasQna}"
+    },
+    {
+     "name": "hasQna",
+     "line": 12,
+     "attr": "th:if",
+     "expr": "${hasQna}"
+    },
+    {
+     "name": "latestTitle",
+     "line": 12,
+     "attr": "th:text",
+     "expr": "${latestTitle}"
+    }
+   ],
+   "error_outputs": [],
+   "url_refs": [
+    {
+     "method": "GET",
+     "url": "/qna/new",
+     "line": 9,
+     "kind": "링크"
+    },
+    {
+     "method": "GET",
+     "url": "/qna",
+     "line": 12,
+     "kind": "링크"
+    }
+   ],
+   "inputs": [],
+   "controls": [
+    {
+     "tag": "a",
+     "line": 9,
+     "text": "질문하기",
+     "attrs": {
+      "th:href": "@{/qna/new}"
+     }
+    },
+    {
+     "tag": "a",
+     "line": 12,
+     "text": "최근 질문 제목",
+     "attrs": {
+      "th:if": "${hasQna}",
+      "th:href": "@{/qna}",
+      "th:text": "${latestTitle}"
+     }
+    }
+   ],
+   "texts": [
+    {
+     "tag": "p",
+     "line": 11,
+     "text": "등록된 질문이 없습니다.",
+     "cond_attr": "th:unless",
+     "cond": "${hasQna}",
+     "th_text": null
+    }
+   ]
+  },
+  {
+   "file": "src/main/resources/templates/qna/old.html",
+   "view": "qna/old",
+   "title": "옛 화면",
+   "headings": [],
+   "provides_fragment": false,
+   "includes": [],
+   "scripts": [],
+   "refs": [],
+   "error_outputs": [],
+   "url_refs": [],
+   "inputs": [],
+   "controls": [],
+   "texts": []
+  },
+  {
+   "file": "src/main/resources/templates/qna/write.html",
+   "view": "qna/write",
+   "title": "질문 작성",
+   "headings": [
+    "질문 작성"
+   ],
+   "provides_fragment": false,
+   "includes": [],
+   "scripts": [
+    {
+     "url": "@{/js/qna.js}",
+     "line": 5
+    }
+   ],
+   "refs": [
+    {
+     "name": "qnaForm",
+     "line": 10,
+     "attr": "th:object",
+     "expr": "${qnaForm}"
+    },
+    {
+     "name": "title",
+     "line": 11,
+     "attr": "th:field",
+     "expr": "*{title}"
+    },
+    {
+     "name": "content",
+     "line": 12,
+     "attr": "th:field",
+     "expr": "*{content}"
+    }
+   ],
+   "error_outputs": [],
+   "url_refs": [
+    {
+     "method": "GET",
+     "url": "/oauth2/authorization/kakao",
+     "line": 9,
+     "kind": "링크"
+    },
+    {
+     "method": "POST",
+     "url": "/qna",
+     "line": 10,
+     "kind": "폼"
+    },
+    {
+     "method": "GET",
+     "url": "/qna",
+     "line": 16,
+     "kind": "링크"
+    },
+    {
+     "method": "GET",
+     "url": "/qna",
+     "line": 17,
+     "kind": "링크"
+    }
+   ],
+   "inputs": [
+    {
+     "line": 11,
+     "attrs": {
+      "id": "title",
+      "th:field": "*{title}",
+      "maxlength": "30"
+     }
+    },
+    {
+     "line": 12,
+     "attrs": {
+      "id": "content",
+      "th:field": "*{content}"
+     }
+    },
+    {
+     "line": 13,
+     "attrs": {
+      "id": "dueDate",
+      "name": "dueDate",
+      "type": "text",
+      "onfocus": "this.type='date'"
+     }
+    }
+   ],
+   "controls": [
+    {
+     "tag": "a",
+     "line": 9,
+     "text": "카카오로 로그인",
+     "attrs": {
+      "href": "/oauth2/authorization/kakao"
+     }
+    },
+    {
+     "tag": "form",
+     "line": 10,
+     "text": "등록",
+     "attrs": {
+      "th:action": "@{/qna}",
+      "th:object": "${qnaForm}",
+      "method": "post"
+     }
+    },
+    {
+     "tag": "button",
+     "line": 14,
+     "text": "등록",
+     "attrs": {
+      "id": "saveButton",
+      "type": "submit",
+      "_form_action": "@{/qna}",
+      "_form_method": "POST"
+     }
+    },
+    {
+     "tag": "a",
+     "line": 16,
+     "text": "목록으로",
+     "attrs": {
+      "th:href": "@{/qna}"
+     }
+    },
+    {
+     "tag": "a",
+     "line": 17,
+     "text": "취소",
+     "attrs": {
+      "href": "/qna"
+     }
+    }
+   ],
+   "texts": []
+  }
+ ]
+}

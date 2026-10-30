@@ -90,6 +90,8 @@ def trace(run_dir: Path, unit: str | None = None, item: str | None = None) -> st
                 lines.append(f"  ※ 판정 갈림(덜 쪼갠 신호): {r['split_issue']}")
             for p in r.get("evidence_problems", []):
                 lines.append(f"  ※ 근거 문제: {p}")
+            for p in r.get("evidence_fixes", []):
+                lines.append(f"  ※ 근거 줄 번호 보정: {p}")
             for ev in r.get("evidence", []):
                 lines.append(f"  근거 {ev.get('file')}:{ev.get('line')}")
                 if (cb and ev.get("file") in cb.files and isinstance(ev.get("line"), int)

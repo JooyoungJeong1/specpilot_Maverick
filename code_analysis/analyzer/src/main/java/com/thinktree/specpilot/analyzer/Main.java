@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  */
 public class Main {
 
-    static final String VERSION = "0.8.0";
+    static final String VERSION = "0.8.1";
 
     public static void main(String[] args) throws Exception {
         Map<String, String> opts = parseArgs(args);

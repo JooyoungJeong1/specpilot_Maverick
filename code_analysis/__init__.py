@@ -3,4 +3,4 @@
 LLM을 쓰지 않는다. 백엔드(.java + Thymeleaf)는 Java 분석기(JavaParser + Symbol Solver + Jsoup), 프론트엔드(.js)는 tree-sitter로 읽는다.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"

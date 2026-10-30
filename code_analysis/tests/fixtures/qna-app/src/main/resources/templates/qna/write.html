@@ -10,8 +10,10 @@
 <form th:action="@{/qna}" th:object="${qnaForm}" method="post">
   <input id="title" th:field="*{title}" maxlength="30">
   <textarea id="content" th:field="*{content}"></textarea>
+  <input id="dueDate" name="dueDate" type="text" onfocus="this.type='date'">
   <button id="saveButton" type="submit">등록</button>
 </form>
 <a th:href="@{/qna}">목록으로</a>
+<a href="/qna">취소</a>
 </body>
 </html>

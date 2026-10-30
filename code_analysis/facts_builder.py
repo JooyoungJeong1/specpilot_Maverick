@@ -395,10 +395,13 @@ class FactsBuilder:
                 a, line = inp["attrs"], inp["line"]
                 typ = (a.get("type") or "").lower()
                 notable = [k for k in NOTABLE_INPUT_ATTRS if k in a]
-                if typ not in NOTABLE_INPUT_TYPES and not notable:
+                inline = {k: v for k, v in a.items() if k.startswith("on") and v}    # 인라인 이벤트 속성 (v0.2.1)
+                if typ not in NOTABLE_INPUT_TYPES and not notable and not inline:
                     continue
                 name = a.get("id") or a.get("name") or a.get("th:field") or typ
                 bits = []
+                if inline and typ not in NOTABLE_INPUT_TYPES:
+                    bits.append(f"type={typ or 'text'}")
                 if typ in NOTABLE_INPUT_TYPES:
                     bits.append(f"type={typ}" + (" (브라우저 날짜·시간 선택기)" if typ in ("date", "datetime-local", "month", "time")
                                                  else " (브라우저 기본 형식 검사: 제출할 때 동작하고 문구는 브라우저가 정함)"))
@@ -410,23 +413,65 @@ class FactsBuilder:
                                  "pattern": f"pattern={v} (브라우저가 제출할 때 검사)",
                                  "readonly": "readonly (수정할 수 없음)", "disabled": "disabled (처음부터 비활성)",
                                  "min": f"min={v}", "max": f"max={v}"}[k])
+                for k, v in inline.items():
+                    m = re.search(r"this\.type\s*=\s*['\"](\w+)['\"]", v)
+                    when = {"onfocus": "포커스를 받으면", "onblur": "포커스를 잃으면", "onclick": "누르면",
+                            "oninput": "입력할 때마다", "onchange": "값이 바뀌면"}.get(k, f"{k} 때")
+                    bits.append(f"{when} type={m.group(1)}로 바뀜 ({k}=\"{short(v, 50)}\")" if m
+                                else f"{when} 인라인 코드 실행 ({k}=\"{short(v, 60)}\")")
                 self.facts.append(Fact("html", t["file"], line, f"입력란 {name}: {', '.join(bits)}"))
             for c in t["controls"]:
-                at = c["attrs"]
-                cond = next((at[k] for k in ("th:if", "th:unless", "sec:authorize", "data-th-if") if k in at), None)
-                confirm = next((at[k] for k in ("onclick", "onsubmit") if "confirm(" in at.get(k, "")), None)
-                if not cond and not confirm:
-                    continue
-                label = c["text"] or at.get("value") or at.get("id") or c["tag"]
-                what = {"a": "링크", "button": "버튼", "form": "폼"}[c["tag"]]
-                url = thymeleaf_url(at.get("th:action") or at.get("action") or at.get("th:href") or at.get("href"))
-                bits = []
-                if cond:
-                    bits.append(f"{cond} {'아닐 때만' if 'th:unless' in at else '일 때만'} 보임")
-                if confirm:
-                    bits.append(f"누르면 확인 창({short(confirm, 40)})")
-                self.facts.append(Fact("html", t["file"], c["line"],
-                                       f"{what} '{short(label, 30)}'{f'({url})' if url else ''}: {', '.join(bits)}"))
+                fact = self._control_fact(c)
+                if fact:
+                    self.facts.append(Fact("html", t["file"], c["line"], fact))
+            for tx in t.get("texts", []):                         # 조건이 붙은 문구 (분석기 v0.8.1부터)
+                if tx.get("th_text"):
+                    shown = f"th:text={tx['th_text']} 값" + (f" (자리표시 '{short(tx['text'], 30)}')" if tx["text"] else "")
+                else:
+                    shown = f"'{short(tx['text'], 60)}'"
+                when = "아닐 때만" if "unless" in tx["cond_attr"] else "일 때만"
+                self.facts.append(Fact("html", t["file"], tx["line"],
+                                       f"문구 {shown}: {tx['cond_attr']}=\"{tx['cond']}\" {when} 보임"))
+
+    @staticmethod
+    def _control_fact(c: dict) -> str | None:
+        """버튼·링크마다: 라벨 → 동작(이동·폼 제출·JS), 표시 조건, 확인 창 유무.
+        th:text가 있으면 라벨은 실행 시 바뀌므로 자리표시라고 밝힌다 (자리표시 문구를 실제 라벨로 오해하지 않게)."""
+        at, tag = c["attrs"], c["tag"]
+        cond_key = next((k for k in ("th:if", "th:unless", "sec:authorize", "data-th-if", "data-th-unless") if k in at), None)
+        confirm = next((at[k] for k in ("onclick", "onsubmit") if "confirm(" in at.get(k, "")), None)
+        th_text = at.get("th:text") or at.get("th:utext")
+        raw = c["text"] or at.get("value") or at.get("aria-label") or at.get("id") or tag
+        if th_text:
+            label = f"(th:text={th_text} 값" + (f", 자리표시 '{short(c['text'], 20)}')" if c["text"] else ")")
+        else:
+            label = f"'{short(raw, 30)}'"
+        if tag == "a":
+            url = thymeleaf_url(at.get("th:href") or at.get("href"))
+            if not url and not at.get("onclick"):
+                return None
+            action = f"누르면 GET {url}로 이동" if url else f"누르면 onclick=\"{short(at['onclick'], 40)}\""
+            what = "링크"
+        elif tag == "button":
+            typ = (at.get("type") or "submit").lower()
+            if typ == "submit" and at.get("_form_action") is not None:
+                action = f"누르면 {at.get('_form_method', 'GET')} {thymeleaf_url(at['_form_action']) or at['_form_action'] or '(같은 주소)'} 폼 제출"
+            elif at.get("onclick"):
+                action = f"누르면 onclick=\"{short(at['onclick'], 40)}\""
+            else:
+                action = "JS로 처리" + (f" (id={at['id']})" if at.get("id") else "") if typ == "button" else "폼 제출"
+            what = "버튼"
+        else:                                                 # form: 조건·확인 창이 있을 때만 (버튼 사실과 겹치지 않게)
+            if not cond_key and not confirm:
+                return None
+            url = thymeleaf_url(at.get("th:action") or at.get("action"))
+            action = f"{(at.get('method') or 'get').upper()} {url or '(같은 주소)'} 폼"
+            what = "폼"
+        bits = [action]
+        if cond_key:
+            bits.append(f"{cond_key}=\"{at[cond_key]}\" {'아닐 때만' if 'unless' in cond_key else '일 때만'} 보임")
+        bits.append(f"확인 창({short(confirm, 40)})" if confirm else "확인 창 없음")
+        return f"{what} {label}: {', '.join(bits)}"
 
     # ------------------------------------------------ JS
 
@@ -463,10 +508,18 @@ class FactsBuilder:
             events = sorted({b["event_type"] for b in jf["event_bindings"]} - PAGE_EVENTS - {None})
             present = {b["event_type"] for b in jf["event_bindings"]}
             missing = [e for e in WATCHED_EVENTS if e not in present]
-            summary = f"{path.split('/')[-1]}: 붙이는 이벤트 {', '.join(events) or '없음'}"
+            for cfg in jf.get("lib_configs", []):                # 라이브러리 설정 객체 (이벤트가 아니라 설정으로 동작하는 기능)
+                name = f"{cfg['var']}을(를) " if cfg.get("var") else ""
+                self.facts.append(Fact("js", path, cfg["line"],
+                                       f"{name}{cfg['callee']}에 넘기는 설정: {', '.join(cfg['props'])}",
+                                       related={path} | set(users), anchor_self=not users))
+            summary = f"{path.split('/')[-1]}: addEventListener로 붙이는 이벤트 {', '.join(events) or '없음'}"
             if missing:
                 summary += f" ({'·'.join(missing)} 이벤트 없음)"
             summary += ". 정규식 " + ("있음" if jf["regex_literals"] else "없음")
+            if jf.get("lib_configs"):
+                summary += f". 라이브러리 설정 {len(jf['lib_configs'])}개(따로 적은 사실 참고)"
+            summary += " (인라인 이벤트 속성은 템플릿 사실 참고)"
             calls = [f"{u['method']} {u['url']}" for u in jf["url_refs"]]
             if calls:
                 summary += ". 서버 요청·이동: " + ", ".join(dict.fromkeys(calls))

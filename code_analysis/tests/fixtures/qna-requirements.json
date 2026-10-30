@@ -1,0 +1,25 @@
+{
+  "_설명": "code_analysis 테스트용 가상 requirements.json (가상의 QnA 앱, 기업 자료 아님). 화면별 나누기 시험에 필요한 칸만 넣었다.",
+  "app_profile": {
+    "screens": [
+      {"screen_id": "QNA-001", "name": "질문 목록", "type": "화면"},
+      {"screen_id": "QNA-002", "name": "질문 작성", "type": "화면"},
+      {"screen_id": "QNA-003", "name": "질문 작성 취소 확인", "type": "팝업"}
+    ],
+    "flows": [
+      {"from": "QNA-001", "to": "QNA-002", "trigger": "'질문하기' 링크를 누른다"}
+    ]
+  },
+  "units": [
+    {"id": "REQ-QNA-001-01", "screen_id": "QNA-001", "kind": "표시", "when": "질문 목록 화면에 들어간다",
+     "then": "질문 목록이 표시된다", "exact": {"message": null, "values": [], "target": null}},
+    {"id": "REQ-QNA-001-02", "screen_id": "QNA-001", "kind": "이동", "when": "'질문하기' 링크를 누른다",
+     "then": "질문 작성 화면으로 이동한다", "exact": {"message": null, "values": [], "target": "QNA-002"}},
+    {"id": "REQ-QNA-002-01", "screen_id": "QNA-002", "kind": "검증", "when": "제목을 비우고 등록을 누른다",
+     "then": "오류 문구가 표시된다", "exact": {"message": "제목을 입력하세요", "values": [], "target": null}},
+    {"id": "REQ-QNA-002-02", "screen_id": "QNA-002", "kind": "실패", "when": "이미 있는 제목으로 등록한다",
+     "then": "오류 문구가 표시된다", "exact": {"message": "이미 있는 제목입니다.", "values": [], "target": null}},
+    {"id": "REQ-QNA-003-01", "screen_id": "QNA-003", "kind": "표시", "when": "작성 중 취소를 누른다",
+     "then": "취소 확인 팝업이 표시된다", "exact": {"message": "작성을 취소하시겠습니까?", "values": [], "target": null}}
+  ]
+}

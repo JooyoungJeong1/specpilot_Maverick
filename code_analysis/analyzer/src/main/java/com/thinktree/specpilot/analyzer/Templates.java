@@ -30,6 +30,12 @@ final class Templates {
     static final Pattern MODEL_EXPR = Pattern.compile("[$*]\\{\\s*([A-Za-z_][A-Za-z0-9_]*)");
     private static final Set<String> SKIP_VARS = Set.of("param", "session", "application", "request", "response");
     private static final Pattern FRAGMENT = Pattern.compile("~\\{\\s*([\\w/\\-.]+)\\s*::");
+    /** 조건 속성: 이 값이 참(또는 거짓)일 때만 요소가 그려진다 */
+    private static final List<String> CONDITION_ATTRS = List.of("th:if", "th:unless", "data-th-if", "data-th-unless",
+            "sec:authorize", "th:case", "data-th-case");
+    /** 문구 요소로 보지 않는 태그 (버튼·링크·입력란은 controls·inputs에서 따로 다룬다) */
+    private static final Set<String> NOT_TEXT_TAGS = Set.of("a", "button", "form", "input", "select", "textarea", "option",
+            "script", "style", "title", "head", "html", "body", "meta", "link", "th:block");
     private static final Pattern FRAGMENT_PLAIN = Pattern.compile("^\\s*([\\w/\\-.]+)\\s*::");
 
     /** 템플릿 하나 */
@@ -46,6 +52,7 @@ final class Templates {
         final List<Map<String, Object>> urlRefs = new ArrayList<>();
         final List<Map<String, Object>> inputs = new ArrayList<>();
         final List<Map<String, Object>> controls = new ArrayList<>();
+        final List<Map<String, Object>> texts = new ArrayList<>();      // 조건이 붙은 문구 요소 (v0.8.1)
         final Set<String> refNames = new LinkedHashSet<>();
 
         Template(String file, String view) {
@@ -67,6 +74,7 @@ final class Templates {
             m.put("url_refs", urlRefs);
             m.put("inputs", inputs);
             m.put("controls", controls);
+            m.put("texts", texts);
             return m;
         }
     }
@@ -133,6 +141,24 @@ final class Templates {
                         el.hasAttr("th:action") ? el.attr("th:action") : el.attr("action"), line, "폼");
                 case "a" -> addUrl(t, "GET", el.hasAttr("th:href") ? el.attr("th:href") : el.attr("href"), line, "링크");
                 default -> {
+                }
+            }
+            if (!NOT_TEXT_TAGS.contains(tag)) {                 // 조건이 붙은 문구: "없으면 숨김" 같은 표시 조건을 사실로 남긴다
+                String condAttr = CONDITION_ATTRS.stream().filter(el::hasAttr).findFirst().orElse(null);
+                if (condAttr != null) {
+                    String own = el.ownText().strip();
+                    String all = el.text().strip();
+                    String thText = el.hasAttr("th:text") ? el.attr("th:text") : el.hasAttr("th:utext") ? el.attr("th:utext")
+                            : el.hasAttr("data-th-text") ? el.attr("data-th-text") : null;
+                    String text = !own.isEmpty() ? own : all;
+                    if (!text.isEmpty() || thText != null) {
+                        Map<String, Object> tx = item("tag", tag, "line", line);
+                        tx.put("text", text.length() > 80 ? text.substring(0, 80) + "…" : text);
+                        tx.put("cond_attr", condAttr);
+                        tx.put("cond", el.attr(condAttr));
+                        tx.put("th_text", thText);
+                        t.texts.add(tx);
+                    }
                 }
             }
             if (tag.equals("input") || tag.equals("textarea") || tag.equals("select")) {

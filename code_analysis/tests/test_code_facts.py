@@ -127,7 +127,7 @@ def test_js(result):
     res, _ = result
     b = find(res, "js", "#title input 이벤트", "saveButton.disabled")[0]
     assert b.file == JS and "addEventListener" in codebase.load(APP).line(JS, b.line)
-    assert find(res, "js", "qna.js: 붙이는 이벤트 input", "blur·focusout·submit 이벤트 없음", "qna/write.html")
+    assert find(res, "js", "qna.js: addEventListener로 붙이는 이벤트 input", "blur·focusout·submit 이벤트 없음", "qna/write.html")
 
 
 def test_unused_and_unhandled(result):
@@ -205,3 +205,30 @@ def test_call_targets_from_analyzer():
 def test_inherited_field_route_calls(result):
     res, _ = result
     assert find(res, "route", "POST /admin/qna/{id}/close", "호출 QnaService.close")
+
+
+# ---------------------------------------------------------------- v0.2.1: 라이브러리 설정 · 조건부 문구 · 인라인 이벤트 · 버튼·링크
+
+def test_library_config_fact(result):
+    res, _ = result
+    f = find(res, "js", "gridOptions을(를) agGrid.createGrid에 넘기는 설정", "pagination=true", "paginationPageSize=10",
+             "columnDefs=객체 2개 (headerName: 번호, 제목)")[0]
+    assert f.file.endswith("qna-list.js") and "const gridOptions" in codebase.load(APP).line(f.file, f.line)
+    # 이벤트가 없다는 요약은 범위를 밝힌다 (라이브러리 설정을 "없음"으로 읽지 않게)
+    assert find(res, "js", "qna-list.js: addEventListener로 붙이는 이벤트", "라이브러리 설정 1개")
+
+
+def test_conditional_text_and_placeholder(result):
+    res, _ = result
+    t = find(res, "html", "문구 '등록된 질문이 없습니다.'", 'th:unless="${hasQna}" 아닐 때만 보임')[0]
+    assert "등록된 질문이 없습니다." in codebase.load(APP).line(t.file, t.line)
+    # th:text가 있는 링크의 문구는 자리표시라고 밝힌다
+    assert find(res, "html", "링크 (th:text=${latestTitle} 값, 자리표시 '최근 질문 제목')", 'th:if="${hasQna}" 일 때만 보임')
+    assert not find(res, "html", "링크 '최근 질문 제목'")
+
+
+def test_inline_event_and_every_link(result):
+    res, _ = result
+    assert find(res, "html", "입력란 dueDate: type=text", "포커스를 받으면 type=date로 바뀜")
+    assert find(res, "html", "링크 '취소': 누르면 GET /qna로 이동, 확인 창 없음")
+    assert find(res, "html", "버튼 '등록': 누르면 POST /qna 폼 제출, 확인 창 없음")

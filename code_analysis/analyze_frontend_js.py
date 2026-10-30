@@ -10,6 +10,7 @@
   - forEach로 여러 요소에 한꺼번에 붙인 이벤트의 대상 요소 (target)
   - 서버 요청·이동 주소 (url_refs: fetch, location.href)
   - 경로를 파일 이름이 아니라 ③과 같은 상대 경로로, 줄 번호를 ③의 줄 목록 기준으로 낸다
+  - 라이브러리에 넘기는 설정 객체 (lib_configs: AG Grid 옵션처럼 이벤트가 아니라 설정으로 동작하는 기능)
 """
 from __future__ import annotations
 
@@ -22,6 +23,10 @@ from tree_sitter import Language, Parser
 
 JS_LANGUAGE = Language(tsjs.language())
 PAGE_EVENTS = {"DOMContentLoaded", "load", "readystatechange"}
+# 설정 객체로 보지 않는 호출 (이벤트·요청·배열 순회 등은 따로 다루거나 사실과 관계없음)
+NOT_CONFIG_CALLS = ("addEventListener", "removeEventListener", "fetch", "then", "catch", "finally", "forEach", "map",
+                    "filter", "reduce", "find", "some", "every", "push", "assign", "stringify", "parse", "log", "warn",
+                    "error", "setTimeout", "setInterval", "querySelector", "querySelectorAll", "getElementById")
 EFFECT_PROPS = ("disabled", "hidden", "textContent", "innerText", "innerHTML", "value", "type", "checked", "src", "href",
                 "className")
 
@@ -200,8 +205,102 @@ def parse_js_source(file: str, text: str) -> dict:
                 if url:
                     url_refs.append({"method": "GET", "url": url, "line": _line(node), "kind": "JS 이동"})
 
+    # ---- 라이브러리 설정 객체: 호출·생성자에 넘기는 객체 리터럴 (직접 또는 변수로)
+    objects_by_var: dict[str, object] = {}
+    arrays_by_var: dict[str, object] = {}
+    for node in _iter_nodes(root):
+        if node.type == "variable_declarator":
+            v = node.child_by_field_name("value")
+            if v is not None and v.type == "object":
+                objects_by_var[_t(node.child_by_field_name("name"))] = v
+            elif v is not None and v.type == "array":
+                arrays_by_var[_t(node.child_by_field_name("name"))] = v
+
+    def value_text(v) -> str:
+        if v is None:
+            return "?"
+        if v.type in ("string", "template_string"):
+            return f"\"{_string_value(v)}\""
+        if v.type in ("number", "true", "false", "null"):
+            return _t(v)
+        if v.type == "array":
+            if all(e.type in ("number", "string", "true", "false") for e in v.named_children):
+                return "[" + ", ".join(value_text(e) for e in v.named_children) + "]"
+            return array_summary(v)
+        if v.type in ("arrow_function", "function_expression", "function"):
+            eff = effects(v, 1)
+            return "함수" + (f"({'; '.join(eff)})" if eff else "")
+        if v.type == "identifier" and _t(v) in arrays_by_var:
+            return array_summary(arrays_by_var[_t(v)])
+        return _short(_t(v), 40)
+
+    def array_summary(arr) -> str:
+        """[{headerName: "번호", ...}, ...] → 객체 N개 (headerName: 번호, 제목, …)"""
+        objs = [e for e in arr.named_children if e.type == "object"]
+        if not objs:
+            return _short(_t(arr), 50)
+        first_key = None
+        vals = []
+        for o in objs:
+            for pair in o.named_children:
+                if pair.type == "pair" and pair.child_by_field_name("value") is not None \
+                        and pair.child_by_field_name("value").type == "string":
+                    k = _t(pair.child_by_field_name("key")).strip("\"'")
+                    if first_key in (None, k):
+                        first_key = k
+                        vals.append(_string_value(pair.child_by_field_name("value")))
+                        break
+        return f"객체 {len(objs)}개" + (f" ({first_key}: {', '.join(vals)})" if first_key else "")
+
+    def props_of(obj, prefix: str = "", depth: int = 0) -> list[str]:
+        out = []
+        for pair in obj.named_children:
+            if pair.type == "shorthand_property_identifier":
+                name = _t(pair)
+                out.append(f"{prefix}{name}={value_text_ident(name)}")
+            elif pair.type == "pair":
+                key = _t(pair.child_by_field_name("key")).strip("\"'")
+                val = pair.child_by_field_name("value")
+                if val is not None and val.type == "object" and depth < 1:
+                    out += props_of(val, f"{prefix}{key}.", depth + 1)
+                else:
+                    out.append(f"{prefix}{key}={value_text(val)}")
+        return out
+
+    def value_text_ident(name: str) -> str:
+        if name in arrays_by_var:
+            return array_summary(arrays_by_var[name])
+        if name in objects_by_var:
+            return "{" + ", ".join(props_of(objects_by_var[name])[:6]) + "}"
+        return name
+
+    lib_configs = []
+    seen_objects = set()
+    for node in _iter_nodes(root):
+        if node.type not in ("call_expression", "new_expression"):
+            continue
+        callee = node.child_by_field_name("function") if node.type == "call_expression" else node.child_by_field_name("constructor")
+        callee_text = _t(callee)
+        if not callee_text or callee_text.split(".")[-1] in NOT_CONFIG_CALLS:
+            continue
+        args = node.child_by_field_name("arguments")
+        for a in (args.named_children if args is not None else []):
+            obj, var = None, None
+            if a.type == "object":
+                obj = a
+            elif a.type == "identifier" and _t(a) in objects_by_var:
+                obj, var = objects_by_var[_t(a)], _t(a)
+            if obj is None or obj.start_byte in seen_objects:
+                continue
+            props = props_of(obj)
+            if len(props) < 2:
+                continue
+            seen_objects.add(obj.start_byte)
+            lib_configs.append({"callee": callee_text, "var": var, "line": _line(obj), "call_line": _line(node),
+                                "props": props[:16]})
+
     return {"file": file, "selectors": selectors, "event_bindings": event_bindings, "regex_literals": regex_literals,
-            "string_literals": string_literals, "url_refs": url_refs}
+            "string_literals": string_literals, "url_refs": url_refs, "lib_configs": lib_configs}
 
 
 def user_bindings(result: dict) -> list[dict]:
@@ -221,11 +320,12 @@ def parse_js_file(path: Path) -> dict:
 
 def analyze_js_directory(js_root: Path) -> dict:
     """폴더 전체 (verification2와 같은 모양으로 합친다)."""
-    aggregated = {"files": [], "selectors": [], "event_bindings": [], "regex_literals": [], "string_literals": [], "url_refs": []}
+    aggregated = {"files": [], "selectors": [], "event_bindings": [], "regex_literals": [], "string_literals": [], "url_refs": [],
+                  "lib_configs": []}
     for js_file in sorted(js_root.rglob("*.js")):
         result = parse_js_file(js_file)
         aggregated["files"].append(result["file"])
-        for key in ("selectors", "event_bindings", "regex_literals", "string_literals", "url_refs"):
+        for key in ("selectors", "event_bindings", "regex_literals", "string_literals", "url_refs", "lib_configs"):
             aggregated[key] += [{"file": result["file"], **item} for item in result[key]]
     return aggregated
 

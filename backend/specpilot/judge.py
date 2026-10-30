@@ -179,9 +179,14 @@ def judge_screen(ctx: RunContext, cb: Codebase, sid: str, units: list[dict], pat
             results[r["unit_id"]] = r
 
     # 근거 줄 대조: LLM이 지어낸 근거면 판정을 확인필요로 내린다.
-    evidence_fail = 0
+    # 위아래 2줄 안에 같은 코드가 있으면 줄 번호만 고치고 판정은 그대로 둔다 (evidence_fixes에 기록).
+    evidence_fail = line_fixes = 0
     for r in results.values():
-        problems = code_prep.verify_evidence(cb, r.get("evidence", []))
+        fixes: list[str] = []
+        problems = code_prep.verify_evidence(cb, r.get("evidence", []), fixes)
+        if fixes:
+            line_fixes += len(fixes)
+            r["evidence_fixes"] = fixes
         r["evidence_ok"] = not problems
         if problems:
             evidence_fail += 1
@@ -201,7 +206,7 @@ def judge_screen(ctx: RunContext, cb: Codebase, sid: str, units: list[dict], pat
     out = {"screen_id": sid, "results": [results[u] for u in unit_ids], "extras": obj.get("extras", [])}
     write_json(ctx.path("judge", f"{sid}.json"), out)
     status = STATUS_REVIEW if schema.errors(issues) else STATUS_DONE
-    meta.update(status=status, evidence_failures=evidence_fail, spacing_only=spacing_only,
+    meta.update(status=status, evidence_failures=evidence_fail, evidence_line_fixes=line_fixes, spacing_only=spacing_only,
                 issues=[i.to_dict() for i in issues])
     write_json(ctx.path("judge", f"{sid}.meta.json"), meta)
     return meta
@@ -299,6 +304,7 @@ def merge_judgments(run_dir: Path) -> dict:
             "by_status": count(verdicts.values()),
             "items_by_status": count(i["status"] for i in items.values()),
             "evidence_failures": sum(1 for r in results.values() if not r.get("evidence_ok", True)),
+            "evidence_line_fixes": sum(len(r.get("evidence_fixes") or []) for r in results.values()),   # 줄 번호만 고친 근거
             "spacing_only": sum(1 for r in results.values()                      # 띄어쓰기만 달라 구현으로 바꾼 것
                                 if r.get("original_status") == "불일치" and r.get("status") == "구현"),
             "split_issues": len(split_issues),        # 덜 쪼갠 신호
