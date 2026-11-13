@@ -1,6 +1,6 @@
 // 요구사항 표 (CLAUDE.md 5장 /table): 행 만들기, 거르기, 정렬
 import type { ItemStatus, Judgments } from '../types/judgments.ts'
-import type { Origin } from '../types/requirements.ts'
+import { APP_SCREEN_ID, type Origin } from '../types/requirements.ts'
 import type { ScreenGroup } from './screens.ts'
 import { cardTitle } from './title.ts'
 import type { UnitStatus, UnitView } from './verdicts.ts'
@@ -98,6 +98,28 @@ export function itemTarget(row: ItemRow): { screenId: string; unitId: string } |
 /** 그 판정의 카드가 펼쳐진 화면별 보기 주소 */
 export function cardPath(screenId: string, unitId: string): string {
   return `/screen/${encodeURIComponent(screenId)}?unit=${encodeURIComponent(unitId)}`
+}
+
+/** 앱 전체 요구사항은 화면별 보기에 두지 않고 요구사항 표에서 본다. 단위 ID를 주면 그 요구사항으로 검색해 둔다 */
+export function appTablePath(unitId?: string): string {
+  const q = new URLSearchParams({ screen: APP_SCREEN_ID, ...(unitId ? { q: unitId } : {}) })
+  return `/table?${q}`
+}
+
+/** 그 판정을 보는 곳: 화면 요구사항은 화면별 보기의 카드, 앱 전체 요구사항은 요구사항 표 */
+export function unitPath(screenId: string, unitId: string): string {
+  return screenId === APP_SCREEN_ID ? appTablePath(unitId) : cardPath(screenId, unitId)
+}
+
+/**
+ * 사양서 "근거 요구사항" 칸("REQ-A, REQ-B" 또는 "-") → 단위 ID와 그 판정을 보는 주소.
+ * 결과에 없는 ID는 주소 없이 글자로만 둔다.
+ */
+export function unitLinks(cell: string, screenOf: ReadonlyMap<string, string>): { id: string; path: string | null }[] {
+  return cell.split(',').map((s) => s.trim()).filter((s) => s && s !== '-').map((id) => {
+    const screenId = screenOf.get(id)
+    return { id, path: screenId ? unitPath(screenId, id) : null }
+  })
 }
 
 /** 판정 카드의 DOM id (행을 눌러 온 카드로 스크롤할 때) */

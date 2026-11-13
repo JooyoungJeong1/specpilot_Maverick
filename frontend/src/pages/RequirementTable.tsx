@@ -1,4 +1,5 @@
 // 요구사항 표 (CLAUDE.md 5장 /table). 초안 local/reference/app.html의 table()을 옮겼다.
+// ?screen=<화면 ID>&q=<검색어>: 처음 거를 화면과 검색어. 앱 전체 요구사항은 화면별 보기에 없어서 이 표로 보낸다 (lib/table.ts unitPath).
 import { useMemo, useState, type KeyboardEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCurrentRun } from '../api/useRun.ts'
@@ -12,12 +13,13 @@ import {
 } from '../lib/table.ts'
 import { cardTitle } from '../lib/title.ts'
 import { countStatuses, ITEM_STATUSES, mergeVerdicts, UNIT_STATUSES } from '../lib/verdicts.ts'
-import type { Origin } from '../types/requirements.ts'
+import { APP_SCREEN_ID, type Origin } from '../types/requirements.ts'
 
 const ALL_STATUSES = new Set<string>([...UNIT_STATUSES, ...ITEM_STATUSES])
 
-/** 행 전체를 눌러 이동. 키보드로도 열 수 있게 한다. */
-function rowProps(go: () => void) {
+/** 행 전체를 눌러 이동. 키보드로도 열 수 있게 한다. 갈 화면이 없으면(앱 전체) 누를 수 없는 행 */
+function rowProps(go: (() => void) | null) {
+  if (!go) return {}
   return {
     className: 'click',
     tabIndex: 0,
@@ -33,9 +35,9 @@ export default function RequirementTable() {
   const [params, setParams] = useSearchParams()
   const view: TableView = params.get('view') === 'item' ? 'item' : 'unit'
   const [statuses, setStatuses] = useState<Set<string>>(() => new Set(ALL_STATUSES))
-  const [screen, setScreen] = useState('')
+  const [screen, setScreen] = useState(() => params.get('screen') ?? '')
   const [origin, setOrigin] = useState<'' | Origin>('')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => params.get('q') ?? '')
 
   const data = useMemo(() => {
     if (!run) return null
@@ -74,7 +76,7 @@ export default function RequirementTable() {
       <div className="tv-h">
         <div>
           <h1>요구사항 표</h1>
-          <p>모든 요구사항의 구현 상태와 관련 코드를 한 번에 봅니다. 행을 누르면 그 화면으로 이동합니다.</p>
+          <p>모든 요구사항의 구현 상태와 관련 코드를 한 번에 봅니다. 행을 누르면 그 화면으로 이동합니다. 앱 전체 요구사항은 이 표에서 봅니다.</p>
         </div>
         <div className="seg" role="group" aria-label="보는 단위">
           <button type="button" aria-pressed={!isItem} onClick={() => setView('unit')}>요구사항별 {data.units.length}</button>
@@ -109,7 +111,8 @@ export default function RequirementTable() {
                 const target = itemTarget(r)
                 const g = groupOf.get(r.screenId)
                 return (
-                  <tr key={r.key} {...rowProps(() => target && navigate(cardPath(target.screenId, target.unitId)))}>
+                  <tr key={r.key} {...rowProps(target && target.screenId !== APP_SCREEN_ID
+                    ? () => navigate(cardPath(target.screenId, target.unitId)) : null)}>
                     <td style={{ whiteSpace: 'nowrap' }}><b>{r.screenId === 'APP' ? '앱 전체' : r.screenId}</b><span className="q">{g && !g.isApp ? g.name : ''}</span></td>
                     <td style={{ whiteSpace: 'nowrap' }}>{r.item}<span className="q">{where(r.screenId)}</span></td>
                     <td>{itemQuote(r)}</td>
@@ -131,7 +134,7 @@ export default function RequirementTable() {
               {unitList.map(({ view: v, group: g }) => {
                 const ev = v.result?.evidence ?? []
                 return (
-                  <tr key={v.unit.id} {...rowProps(() => navigate(cardPath(v.unit.screen_id, v.unit.id)))}>
+                  <tr key={v.unit.id} {...rowProps(g.isApp ? null : () => navigate(cardPath(v.unit.screen_id, v.unit.id)))}>
                     <td style={{ whiteSpace: 'nowrap' }} className="small muted">{v.unit.id}</td>
                     <td style={{ whiteSpace: 'nowrap' }}><b>{g.isApp ? '앱 전체' : g.id}</b><span className="q">{g.isApp ? '' : g.name}</span></td>
                     <td>

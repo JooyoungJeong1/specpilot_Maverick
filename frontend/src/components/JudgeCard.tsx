@@ -17,7 +17,9 @@ interface Props {
   onToggle: () => void
   /** 이 단위를 확인하는 테스트 단계 */
   steps?: StepRef[]
-  /** "코드 앞뒤 보기". 없으면 버튼을 막아 둔다 (코드 보기 팝업은 아직 없음) */
+  /** "확인하는 테스트"의 단계를 누르면 사양서 탭의 그 단계로 간다. 없으면 글자로만 보여 준다 */
+  onPickStep?: (step: StepRef) => void
+  /** "코드 앞뒤 보기". 없으면 버튼을 막아 둔다 */
   onShowCode?: (ev: Evidence) => void
   /** 기획서 페이지에서 원문 위치를 찾은 결과. 페이지를 보여 주지 않으면 undefined */
   locate?: LocateResult
@@ -37,7 +39,7 @@ function locateNote(r: LocateResult | undefined): string | null {
   }
 }
 
-export default function JudgeCard({ view, pages, open, onToggle, steps = [], onShowCode, locate, onHover }: Props) {
+export default function JudgeCard({ view, pages, open, onToggle, steps = [], onPickStep, onShowCode, locate, onHover }: Props) {
   const { unit: u, result: r, status } = view
   const { title, context } = cardTitle(u)
   const note = cleanNote(r?.note)
@@ -113,7 +115,14 @@ export default function JudgeCard({ view, pages, open, onToggle, steps = [], onS
 
           {steps.length > 0 && <>
             <div className="lbl">확인하는 테스트</div>
-            <div className="muted">{steps.map((s) => `${s.scenarioId} ${s.no}단계`).join(', ')}</div>
+            <div className="steprefs">
+              {steps.map((s) => {
+                const label = `${s.scenarioId} ${s.no}단계`
+                return onPickStep
+                  ? <button type="button" className="linkbtn" key={label} title={s.action} onClick={() => onPickStep(s)}>{label}</button>
+                  : <span className="muted" key={label}>{label}</span>
+              })}
+            </div>
           </>}
         </div>
       )}

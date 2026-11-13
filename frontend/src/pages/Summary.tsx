@@ -7,6 +7,7 @@ import ScreenCard from '../components/ScreenCard.tsx'
 import StackBar from '../components/StackBar.tsx'
 import { groupByScreen, questionScope } from '../lib/screens.ts'
 import { overview, sortByPriority, sortGroups, statusClass, visibleGroups, type SortMode } from '../lib/summary.ts'
+import { appTablePath } from '../lib/table.ts'
 import { countStatuses, ITEM_STATUSES, mergeVerdicts, NOT_JUDGED, UNIT_STATUSES } from '../lib/verdicts.ts'
 
 /** 위쪽 판정별 칸. 판정 전은 있을 때만 */
@@ -30,8 +31,11 @@ export default function Summary() {
   const o = overview(groups)
   const items = Object.values(run.judgments?.items ?? {})
   const itemCounts = countStatuses(items, ITEM_STATUSES)
-  const docNo = new Map(groups.filter((g) => !g.isApp).map((g, i) => [g.id, i + 1]))
-  const list = sortGroups(visibleGroups(groups, onlyProblems), sort)
+  // 화면 카드는 기획서 화면만. 앱 전체 요구사항은 요구사항 표에서 본다
+  const screens = groups.filter((g) => !g.isApp)
+  const appUnits = groups.find((g) => g.isApp)?.units.length ?? 0
+  const docNo = new Map(screens.map((g, i) => [g.id, i + 1]))
+  const list = sortGroups(visibleGroups(screens, onlyProblems), sort)
   const extras = run.judgments?.extras ?? []
   const questions = sortByPriority(run.requirements.questions)
   const lgd = o.counts[NOT_JUDGED] ? UNIT_STATUSES : JUDGED
@@ -46,6 +50,7 @@ export default function Summary() {
             {' '}기획서에서 추론한 함의 요구사항 {o.implied}개 포함.
             {o.counts[NOT_JUDGED] > 0 && ` 코드와 비교하지 못한 판정 전 요구사항이 ${o.counts[NOT_JUDGED]}개 있습니다.`}
             {o.rejected > 0 && ` 반려된 화면 ${o.rejected}개는 요구사항을 뽑지 않았습니다.`}
+            {appUnits > 0 && <>{' '}여러 화면에 걸친 <Link to={appTablePath()}>앱 전체 요구사항 {appUnits}개</Link>는 요구사항 표에서 봅니다.</>}
           </p>
           <StackBar counts={o.counts} statuses={UNIT_STATUSES} />
         </div>
@@ -73,7 +78,7 @@ export default function Summary() {
       </div>
       <div className="grid">
         {list.length
-          ? list.map((g) => <ScreenCard key={g.id} group={g} no={docNo.get(g.id) ?? null} pdfUrl={pdfUrl} />)
+          ? list.map((g) => <ScreenCard key={g.id} group={g} no={docNo.get(g.id) ?? 0} pdfUrl={pdfUrl} />)
           : <div className="empty">문제 있는 화면이 없습니다.</div>}
       </div>
 

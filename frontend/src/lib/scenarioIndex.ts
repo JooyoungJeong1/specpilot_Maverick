@@ -7,6 +7,11 @@ export function stepsForUnits(scenarios: Scenarios | null, unitIds: Iterable<str
     scenario.steps.filter((step) => step.unit_ids.some((u) => ids.has(u))).map((step) => ({ scenario, step })))
 }
 
+/** 사양서 탭의 단계 하나를 가리키는 DOM id. 판정 카드의 "확인하는 테스트"를 누르면 이 단계로 간다. */
+export function stepDomId(scenarioId: string, no: number): string {
+  return `step-${scenarioId}-${no}`
+}
+
 export interface StepRef {
   scenarioId: string
   depth1: string
