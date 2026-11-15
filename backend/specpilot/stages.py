@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import pdf_utils, preflight, schema
+from . import cost, pdf_utils, preflight, schema
 from .config import Settings
 from .llm import LLM, JSONParseError, parse_json
 from .prompts import PromptSet, RenderedPrompt
@@ -28,6 +29,8 @@ class RunContext:
     settings: Settings
     prompts: PromptSet
     llm: LLM | None          # None이면 dry-run (프롬프트만 파일로 남김)
+    # 간단한 분류 작업(③의 화면별 파일 고르기)에 쓸 다른 모델. None이면 llm을 쓴다 (SPECPILOT_SELECT_MODEL)
+    llm_light: LLM | None = None
     _texts: pdf_utils.TextIndex | None = field(default=None, repr=False)
     _preflight: dict | None = field(default=None, repr=False)
 
@@ -86,19 +89,28 @@ def _add_usage(total: dict, usage: dict) -> None:
 
 
 def _call_with_retry(ctx: RunContext, name: str, rendered: RenderedPrompt, content: list[dict],
-                     validate, prepare=None) -> tuple[dict | None, list[schema.Issue], dict]:
+                     validate, prepare=None, light: bool = False) -> tuple[dict | None, list[schema.Issue], dict]:
     """호출 → 파싱 → (prepare: 프로그램이 채울 것 채우기) → 검사. error가 있으면 문제 목록을 붙여 다시 부른다.
 
+    light=True면 간단한 분류 작업용 모델(ctx.llm_light)을 쓴다 (설정되어 있을 때만).
+    메타에는 시도마다 토큰·처리시간·예상 비용(calls)과 그 합계(usage, elapsed_sec, cost_usd)를 남긴다.
     반환: (마지막으로 파싱된 결과 또는 None, 마지막 검사 결과, 메타)
     """
+    use_light = light and ctx.llm_light is not None
+    llm = ctx.llm_light if use_light else ctx.llm
+    model = ctx.settings.select_model if use_light else ctx.settings.model
     messages = [{"role": "user", "content": content}]
     usage: dict = {}
+    calls: list[dict] = []
     obj, issues = None, []
     attempts = 0
     retry_reasons: list[dict] = []   # 시도마다 걸린 오류. 재시도 끝에 통과해도 왜 다시 불렀는지 남긴다
     for attempt in range(1, ctx.settings.max_retries + 2):
         attempts = attempt
-        result = ctx.llm.complete(rendered.system, messages, ctx.settings.max_tokens)
+        started = time.monotonic()
+        result = llm.complete(rendered.system, messages, ctx.settings.max_tokens)
+        calls.append({"attempt": attempt, "elapsed_sec": round(time.monotonic() - started, 2),
+                      "usage": dict(result.usage or {}), "cost_usd": cost.estimate(model, result.usage or {})})
         _add_usage(usage, result.usage)
         ctx.path("raw", f"{name}.attempt{attempt}.txt").write_text(result.text, encoding="utf-8")
 
@@ -123,8 +135,12 @@ def _call_with_retry(ctx: RunContext, name: str, rendered: RenderedPrompt, conte
             {"role": "assistant", "content": result.text},
             {"role": "user", "content": _feedback(issues)},
         ]
+    costs = [c["cost_usd"] for c in calls]
     meta = {"attempts": attempts, "retry_reasons": retry_reasons, "usage": usage,
-            "prompt_version": rendered.version, "model": ctx.settings.model,
+            "elapsed_sec": round(sum(c["elapsed_sec"] for c in calls), 2),
+            "cost_usd": round(sum(costs), 6) if calls and None not in costs else None,
+            "calls": calls,
+            "prompt_version": rendered.version, "model": model,
             "thinking": ctx.settings.thinking, "effort": ctx.settings.effort,
             "max_tokens": ctx.settings.max_tokens, "text_extractor": pdf_utils.text_extractor()}
     return obj, issues, meta

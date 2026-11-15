@@ -19,6 +19,7 @@
     (`common`: 모든 화면 / `screens`: 화면 ID → 그 화면 사실 목록, 사실 하나는 `{"kind", "file", "line", "fact"}`)
   - `backend-analysis.json`, `frontend-js.json`: 중간 결과. 사실이 이상할 때 원인을 찾는 용도
 - `code_facts.json`의 `_설명`, `_meta`(실행 정보, 호출 해석 통계, 화면별로 고른 템플릿, 뺀 사실)는 사람이 보는 칸이다. ③ 프롬프트에는 `common`과 그 화면의 `screens` 목록만 들어간다
+- `reach`(근거 재확인용 도달 정보)는 프롬프트에 넣지 않는다. ③이 판정한 뒤 프로그램이 근거를 다시 확인하는 데 쓴다 (아래 "③ 근거 재확인에 쓰는 도달 정보")
 
 ## 설치
 
@@ -128,6 +129,25 @@ verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으�
 
 사실은 "어느 코드를 봐야 하는지"를 알려 주는 용도다. ③ 프롬프트는 근거를 반드시 실제 코드 줄로 인용하고, 분석 결과와 코드가 다르면 코드를 따르게 되어 있다.
 
+## ③ 근거 재확인에 쓰는 도달 정보 (`reach`)
+
+AI가 댄 근거 줄이 실제로 있어도, 그 코드가 **그 화면의 기능 처리 과정에서 호출되는지**는 따로 봐야 한다
+(예: 등록 화면 단위의 근거로 같은 서비스의 수정 메서드를 댐, 어디서도 부르지 않는 경로를 근거로 댐).
+그래서 화면별 사실 나누기에 쓰는 고리(화면 → 템플릿·JS → 폼·링크·JS가 부르는 경로 → Controller → Service → Repository, 인터페이스면 구현 모두)를 그대로 `code_facts.json`의 `reach`에 내보낸다 (`reach.py`).
+
+| 칸 | 내용 |
+| --- | --- |
+| `methods` | 모든 메서드와 줄 범위 (애노테이션 줄 ~ 닫는 중괄호. 범위는 Python이 중괄호 짝을 세어 정한다. 문자열·주석 안의 중괄호는 세지 않음) |
+| `screens` | 화면 → 그 화면에서 닿는 메서드 이름(`methods`)과 파일(`files`: 템플릿, 포함 조각, JS, 컨트롤러, 서비스, 저장소, 폼 클래스) |
+| `unused` | `unused` 사실의 위치: 어디서도 부르지 않는 경로의 처리 메서드 범위, 어떤 컨트롤러도 반환하지 않는 템플릿 전체 |
+
+③(`backend/specpilot/grounding.py`)은 근거 줄을 감싸는 메서드를 찾아
+- 근거가 모두 `unused` 안이면 구현·불일치를 확인필요로 내리고,
+- 다른 화면에서만 닿는 메서드면 판정은 두고 사람 확인 목록(`judge_review.md`)에 올린다.
+- 화면별 묶음(`--mode screen`)일 때는 `screens[화면].files`를 그 화면 코드 묶음에 더한다.
+
+화면 ↔ 템플릿 대응이 추정이라(아래 "화면별로 나누는 방법") 다른 화면 판단은 판정을 바꾸지 않는다. 대응을 못 찾은 화면은 `screens`에 없고 도달 확인을 건너뛴다.
+
 ## ③과 경로·줄 번호를 맞춘 방법
 
 1. **파일 목록**: `backend/specpilot/code_prep.py`의 `load_codebase`를 그대로 불러 쓴다(수정하지 않음). 확장자, 제외 폴더(test, build, gradle 등), `.min.js`, 300KB 기준이 ③과 같다. 백엔드를 불러올 수 없을 때만 같은 규칙을 옮겨 둔 사본(`codebase.py`)을 쓰고, 두 결과가 같은지는 테스트가 확인한다.
@@ -171,6 +191,7 @@ verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으�
 | `facts_builder.py` | 사실 문장 만들기 |
 | `config_facts.py` | 설정 파일 사실 |
 | `screens.py` | 화면별로 나누기 |
+| `reach.py` | ③ 근거 재확인용 도달 정보 (메서드 줄 범위, 화면별로 닿는 메서드·파일, 미사용 코드 위치) |
 | `codebase.py` | ③과 같은 파일 목록 읽기 |
 | `facts.py` | 사실 모양, ③ 코드 묶음 안인지 검사, 파일 쓰기 |
 | `cli.py`, `__main__.py` | 실행 (`python -m code_analysis`) |
@@ -179,7 +200,7 @@ verification2의 `check_frontend_requirement`(요구사항 하나를 규칙으�
 ## 테스트
 
 ```bash
-python -m pytest code_analysis/tests -q        # 26 passed, 1 skipped (분석기 jar를 빌드하면 27 passed)
+python -m pytest code_analysis/tests -q        # 27 passed, 1 skipped (분석기 jar를 빌드하면 28 passed)
 ```
 
 API 키도 기업 코드도 JDK도 필요 없다. 백엔드 분석 결과는 가상의 앱에 실제 분석기를 돌려 저장해 둔 `fixtures/qna-backend-analysis.json`을 쓴다.

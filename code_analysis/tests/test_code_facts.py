@@ -232,3 +232,27 @@ def test_inline_event_and_every_link(result):
     assert find(res, "html", "입력란 dueDate: type=text", "포커스를 받으면 type=date로 바뀜")
     assert find(res, "html", "링크 '취소': 누르면 GET /qna로 이동, 확인 창 없음")
     assert find(res, "html", "버튼 '등록': 누르면 POST /qna 폼 제출, 확인 창 없음")
+
+
+# ---------------------------------------------------------------- ③ 근거 재확인용 도달 정보 (reach)
+
+def test_reach_for_evidence_recheck(split, tmp_path):
+    from code_analysis.facts import write
+    from code_analysis.reach import method_end
+    reach = split["reach"]
+    m = {x["name"]: x for x in reach["methods"]}
+    assert (m["QnaController.create"]["start"], m["QnaController.create"]["end"]) == (21, 33)   # 애노테이션 줄부터 닫는 중괄호까지
+    assert m["QnaController.check"]["start"] == 40 and m["QnaController.check"]["end"] == 44
+    s2 = reach["screens"]["QNA-002"]
+    # 작성 화면: 폼 제출 경로 → 컨트롤러 → 서비스 → (인터페이스면 구현 모두) → 저장소
+    assert {"QnaController.create", "QnaService.create", "MailNotifyService.send", "SmsNotifyService.send"} <= set(s2["methods"])
+    assert "src/main/java/demo/repository/QnaRepository.java" in s2["files"] and WRITE in s2["files"]
+    assert "QnaService.create" not in reach["screens"]["QNA-001"]["methods"]                  # 목록 화면에서는 닿지 않음
+    unused = {(u["file"], u["start"]) for u in reach["unused"]}
+    assert (CTRL, 40) in unused                                                               # POST /qna/check
+    assert ("src/main/resources/templates/qna/old.html", 1) in unused
+    obj = write(tmp_path / "cf.json", split["common"], split["screens"], split["meta"], reach)
+    assert obj["reach"] is reach and split["meta"]["reach"]["unused"] == len(reach["unused"])
+    # 문자열·주석 안의 중괄호는 세지 않는다
+    assert method_end(['void a() {', '  String s = "}";  // }', '  /* { */', '}', 'x'], 1) == 4
+    assert method_end(['abstract void b();'], 1) == 1

@@ -223,10 +223,14 @@ def cmd_judge(args) -> int:
         return 2
     ctx = RunContext(run_dir, run_dir / "input.pdf", settings, PromptSet(settings.prompts_dir),
                      _make_llm(settings, args.dry_run))
+    if settings.select_model and not args.dry_run and settings.select_model != settings.model:
+        from .llm import AnthropicLLM     # 파일 고르기(분류 작업)는 가벼운 모델로
+        ctx.llm_light = AnthropicLLM(settings.select_model, settings.select_thinking, "")
     only = set(args.screens.split(",")) if args.screens else None
     try:
         report = run_judge(ctx, Path(args.code), only, args.mode,
-                           facts_path=Path(args.facts) if args.facts else None)
+                           facts_path=Path(args.facts) if args.facts else None,
+                           reuse_from=Path(args.reuse_from) if args.reuse_from else None)
     except RuntimeError as e:
         print(f"  ③ {e}", file=sys.stderr)
         return 1
@@ -237,7 +241,16 @@ def cmd_judge(args) -> int:
         print(f"  근거 불일치 {s['evidence_failures']} · 근거 줄 번호 보정 {s.get('evidence_line_fixes', 0)} · "
               f"띄어쓰기만 달라 구현 처리 {s.get('spacing_only', 0)} · 판정 갈림(덜 쪼갠 신호) {s['split_issues']} · "
               f"합칠 후보(너무 쪼갠 신호) {s['merge_candidates']} · 기획서에 없는 구현 {s['extras']}")
-        print("  자세한 내용: judge_report.json, judgments.json")
+        print(f"  근거 재확인: 사람 확인 {s['needs_review']}개 (미사용 코드 근거 {s['unused_evidence']} · "
+              f"다른 화면의 처리 코드 {s['reach_other_screen']} · 근거 없는 조건 {s['condition_gaps']} · "
+              f"설명에 없는 코드 {s['unknown_refs']} · 근거 틀린 기획서 외 구현 {s['extras_unverified']})")
+        u = s["usage"]
+        cost = f"약 ${u['cost_usd']:.4f}" if u.get("cost_usd") is not None else "가격 모름(SPECPILOT_PRICE)"
+        print(f"  비용: 호출 {u['calls']}번 · 입력 {u['input_tokens']:,} · 캐시 쓰기 {u['cache_creation_input_tokens']:,} · "
+              f"캐시 읽기 {u['cache_read_input_tokens']:,} (입력 중 {u['cache_read_ratio']:.0%}) · 출력 {u['output_tokens']:,} 토큰 · "
+              f"{u['elapsed_sec']}초 · {cost}"
+              + (f" · 재사용 화면 {u['screens_reused']}개 (아낀 비용 약 ${u['saved_cost_usd']:.4f})" if u.get("screens_reused") else ""))
+        print("  자세한 내용: judge_report.json, judgments.json, judge_review.md (사람 확인 목록)")
     return 0
 
 
@@ -352,6 +365,8 @@ def main(argv: list[str] | None = None) -> int:
     j.add_argument("--mode", choices=["auto", "whole", "screen"], default="auto",
                    help="auto: 크기를 재서 결정 / whole: 코드 전체 / screen: 화면별 묶음")
     j.add_argument("--facts", help="코드 분석 결과 JSON (코드팀 정적 분석). 형식: docs/code_facts.example.json")
+    j.add_argument("--reuse-from", help="지난 실행 폴더(output/<실행ID>). 입력(프롬프트·단위·코드 묶음·모델 설정)이 같은 화면은 "
+                                         "LLM을 부르지 않고 그 판정을 다시 쓴다. 같은 실행 폴더를 줘도 된다")
     j.add_argument("--dry-run", action="store_true")
     j.set_defaults(func=cmd_judge)
 

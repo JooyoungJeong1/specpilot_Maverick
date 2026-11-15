@@ -72,6 +72,8 @@ def build(code_root: Path, requirements: Path | None = None, code_map: Path | No
         sp.from_code_map(code_map)
         how.append("code_map")
     common, screens, unplaced = sp.split(facts)
+    from .reach import build_reach
+    reach = build_reach(fb, sp, facts)          # ③ 근거 재확인용 (프롬프트에는 넣지 않음)
 
     counts: dict[str, int] = {}
     for f in facts:
@@ -92,8 +94,9 @@ def build(code_root: Path, requirements: Path | None = None, code_map: Path | No
         "screen_templates": sp.matched,
         "screens_without_template": sorted(s for s, v in sp.matched.items() if not v),
         "dropped": problems,
+        "reach": {"methods": len(reach["methods"]), "screens": len(reach["screens"]), "unused": len(reach["unused"])},
     }
-    return {"common": common, "screens": screens, "meta": meta, "facts": facts, "analysis": analysis, "js": js}, problems
+    return {"common": common, "screens": screens, "meta": meta, "reach": reach, "facts": facts, "analysis": analysis, "js": js}, problems
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -114,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
                              Path(args.code_map) if args.code_map else None, jar=args.analyzer_jar,
                              classpath=args.classpath, gradle=args.gradle, analysis=analysis)
     out = Path(args.out)
-    obj = write(out, result["common"], result["screens"], result["meta"])
+    obj = write(out, result["common"], result["screens"], result["meta"], result["reach"])
     side = out.parent                                  # 중간 결과 (사람이 확인하는 용도, 커밋하지 않음)
     (side / "backend-analysis.json").write_text(json.dumps(result["analysis"], ensure_ascii=False, indent=1), encoding="utf-8")
     (side / "frontend-js.json").write_text(json.dumps(result["js"], ensure_ascii=False, indent=1), encoding="utf-8")
@@ -130,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {sid}: 사실 {len(obj['screens'].get(sid, []))}개, 대응 {', '.join(f.split('/')[-1] for f in files) or '찾지 못함'}")
         if meta["unplaced_to_common"]:
             print(f"  어느 화면에도 붙지 않아 common에 넣은 사실 {meta['unplaced_to_common']}개")
+    r = meta["reach"]
+    print(f"  근거 재확인용 도달 정보: 메서드 {r['methods']}개, 화면 {r['screens']}개, 미사용 후보 {r['unused']}곳")
     for p in problems:
         print(f"  [뺌] {p}", file=sys.stderr)
     print(f"저장: {out.resolve()} (중간 결과: backend-analysis.json, frontend-js.json)")

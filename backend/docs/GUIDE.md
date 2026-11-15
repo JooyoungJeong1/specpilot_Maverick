@@ -28,7 +28,7 @@
 | `run` | 입력 점검 → ① → 게이트 → ② → 합치기 | 처음 실행할 때 |
 | `screen` | (입력 점검) → 게이트 → ② (지정한 화면만) → 합치기 | 프롬프트를 고치고 화면 하나만 다시 볼 때, 기획서를 고친 뒤 그 화면만 다시 돌릴 때(`--pdf`) |
 | `merge` | 합치기 | 화면 결과 파일을 직접 고쳤을 때 |
-| `judge` | ③ | `requirements.json`이 나온 뒤 코드와 비교할 때 |
+| `judge` | ③ | `requirements.json`이 나온 뒤 코드와 비교할 때. `--reuse-from 지난실행`이면 입력이 같은 화면은 LLM을 부르지 않고 지난 판정을 다시 쓴다 |
 | `scenario` | ④ | `requirements.json`이 나온 뒤 테스트 사양서를 만들 때. `--excel-only`는 엑셀만 다시 |
 | `trace` | 단계를 거꾸로 | ③ 결과가 이상할 때 원인 단계를 찾을 때 |
 | `score` | ③ 채점 | 정답 세트와 비교해 점수를 낼 때 (조장용) |
@@ -75,7 +75,7 @@ requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)�
 specpilot-backend/
   prompts/          프롬프트 문장 (코드 아님. 프롬프트 담당이 고치는 곳)
   specpilot/        파이썬 코드
-  tests/            API 키 없이 돌아가는 테스트 73개
+  tests/            API 키 없이 돌아가는 테스트 76개
   docs/             이 문서, 프롬프트 변경 정리, 정답 세트 형식 예시
 ```
 
@@ -88,6 +88,7 @@ specpilot-backend/
 | `config.py` | `.env`에서 설정(모델, 재시도 횟수, 반려 기준 등)을 읽는다 |
 | `prompts.py` | `prompts/` 폴더의 프롬프트 파일을 읽어 `{{자리표시자}}`를 채운다. 프롬프트를 **고정 부분**(지침·예시, 캐시됨)과 **입력 부분**(`# 입력` 뒤, 실행마다 바뀜)으로 나누고, 고정 부분의 해시를 `prompt_version`으로 남긴다 |
 | `llm.py` | Claude API 호출. 고정 부분에 캐시를 걸고, 과부하·네트워크 오류는 SDK가 4번까지 다시 보낸다. 응답에서 JSON을 꺼내는 `parse_json`, 테스트용 가짜 LLM `ScriptedLLM`도 여기 있다 |
+| `cost.py` | 요청의 usage(토큰)에 모델 가격을 곱해 예상 비용(USD)을 낸다. `_call_with_retry`가 시도마다 처리시간과 함께 meta의 `calls`에 남긴다 |
 | `pdf_utils.py` | PDF 자르기, 글자 읽기. pdftotext가 있으면 **글자마다 좌표**를 받아(`-bbox`) 오른쪽 설명표의 번호 칸과 왼쪽 화면 그림을 나눠 읽는다. 원문 대조(`TextIndex`)도 여기 있다 |
 | `stages.py`의 `_call_with_retry` | 모든 LLM 단계가 쓰는 **호출 → JSON 꺼내기 → 검사 → 재시도** 반복. 검사에 걸리면 "직전 출력에 아래 문제가 있다"며 문제 목록을 붙여 같은 대화에서 다시 부른다. 출력이 길이 한도에서 잘린 경우는 다시 불러도 같으므로 재시도하지 않는다 |
 | `schema.py` | **검사 규칙과 후처리 전부**. 단계별 검사 함수, ID 붙이기, 함의 검사가 다 여기 있다 |
@@ -191,7 +192,7 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | | |
 | --- | --- |
 | 입력 | `requirements.json` + 소스 코드 폴더 |
-| 출력 | `judge/화면ID.json`(+ meta), `judge/run.json`, `judge/code_map.json`(화면별 묶음일 때), `judgments.json`, `judge_report.json` |
+| 출력 | `judge/화면ID.json`(+ meta), `judge/run.json`, `judge/code_map.json`(화면별 묶음일 때), `judgments.json`, `judge_report.json`, `judge_review.md`(사람 확인 목록) |
 | 프롬프트 | `prompts/judge.txt` + 예시(`examples/judge_example.json`), 화면별 묶음일 때 `prompts/code_select.txt` |
 
 **처리 순서**
@@ -199,17 +200,28 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 2. **줄 번호 붙이기.** 파일마다 `=== 파일경로 ===` 머리글을 달고 줄마다 `줄번호|`를 붙인다. 줄마다 경로를 붙이면 경로가 긴 Java 프로젝트에서 토큰이 세 배 가까이 늘어서(샘플 기준 약 8.5만 → 3.4만), 경로는 머리글에 한 번만 쓴다.
 3. **크기 재기 → 넣는 방식 고르기** (`judge.choose_mode`). 코드 전체가 `SPECPILOT_CODE_TOKEN_LIMIT`(기본 10만) 이하면 **통째로**(whole), 넘으면 **화면별 묶음**(screen). `--mode`로 강제할 수 있다.
 4. **단위 나누기** (`judge.units_by_screen`). 화면 단위는 그 화면으로 보낸다. 앱 전체 단위(REQ-APP-…)는 근거에 화면 ID가 나오는 화면마다 보내고, 어느 화면도 언급하지 않으면 `APP` 묶음으로 모은다(`--screens APP`으로 따로 돌릴 수 있음).
-5. (screen 방식일 때만) **화면-코드 대응표** (`judge.build_code_map`). LLM이 파일 목록을 보고 화면마다 파일을 고른다. 목록에 없는 경로는 버리고 `judge/code_map.json`에 저장한다. **이 파일은 사람이 고쳐도 되고, 있으면 다시 만들지 않는다.** 여기에 프로그램이 단위의 문구(앞 6글자)가 들어 있는 파일을 더한다.
+5. (screen 방식일 때만) **화면-코드 대응표** (`judge.build_code_map`). LLM이 파일 목록을 보고 화면마다 파일을 고른다. 목록에 없는 경로는 버리고 `judge/code_map.json`에 저장한다. **이 파일은 사람이 고쳐도 되고, 있으면 다시 만들지 않는다.** 여기에 프로그램이 단위의 문구(앞 6글자)가 들어 있는 파일과, `--facts`의 도달 정보(`reach`)가 그 화면에서 닿는다고 본 파일(화면 → 경로 → Controller → Service → Repository)을 더한다. 파일 고르기는 분류 작업이라 `SPECPILOT_SELECT_MODEL`로 가벼운 모델을 쓸 수 있다.
 6. **판정 호출.** 코드 묶음을 첫 블록(캐시)으로, 화면 ID와 단위 목록을 그다음에 넣는다. 화면별 묶음이면 "필요한 코드가 묶음에 없어 보이면 미구현이 아니라 확인필요로 하라"고 알려 준다.
 7. **검사** (`schema.validate_judge`). 받은 단위마다 결과가 하나씩 있는지, status가 구현/불일치/미구현/확인필요 중 하나인지, 구현·불일치에 근거 코드가 있는지. 빠진 단위가 있으면 재시도한다.
 8. **근거 줄 대조** (`code_prep.verify_evidence`). LLM이 댄 `파일:줄`에 인용한 코드가 정말 있는지 본다(공백 차이는 무시). 적은 줄에 없어도 **위아래 2줄 안에 같은 코드가 있으면** 지어낸 근거가 아니라 줄 번호를 잘못 센 것으로 보고, 판정은 그대로 두고 근거의 `line`을 고친다(원래 번호는 `line_reported`, 고친 내용은 결과의 `evidence_fixes`). 그 밖에 틀리면 구현·불일치를 **확인필요로 내리고** 원래 판정을 `original_status`에 남긴다. 10/27 실행에서 근거 불일치 9건 중 8건이 1줄 차이(애노테이션 줄과 메서드 선언 줄 혼동)였다.
 9. **띄어쓰기만 다른 문구** (`judge.relax_spacing`). 불일치 이유가 문구의 띄어쓰기뿐이면 구현으로 바꾸고 원래 판정을 남긴다. 띄어쓰기는 추출 도구마다 달라서 비교하지 않기로 했다.
 10. 재시도 후에도 판정이 빠진 단위는 확인필요("판정 누락")로 채운다.
-11. **합치기** (`judge.merge_judgments`).
+11. **근거 재확인** (`grounding.recheck`). 프로그램이 AI의 판정을 한 번 더 본다. LLM을 부르지 않는다.
+    - **처리 과정에서 닿는 코드인가**: `--facts`의 `reach`(code_analysis가 콜그래프로 만든 화면별 메서드·파일)로 근거 줄을 감싸는 메서드를 찾는다. 근거가 모두 **미사용 코드**(어디서도 부르지 않는 경로, 어떤 컨트롤러도 반환하지 않는 템플릿)면 구현·불일치를 **확인필요로 내린다**(note에 `[미사용 코드만 근거로 대 확인필요 처리]`). 근거가 **다른 화면의 처리 메서드**(등록 화면 단위에 수정 메서드)면 판정은 두고 사람 확인 목록에 올린다. 화면 ↔ 템플릿 대응이 추정이라 판정을 바꾸지 않는다. 앱 전체 단위는 원래 여러 화면에 걸치므로 미사용 코드만 본다.
+    - **모든 조건을 확인했나**: conditions가 있는 단위를 구현으로 판정했으면 근거의 `for`(조건 번호)로 조건마다 근거가 있는지 본다. 빠진 조건은 `condition_gaps`.
+    - **설명에 적힌 코드가 있나**: note·mismatch·split_issue에 적힌 파일 이름과 `XxxService.method` 같은 클래스·메서드가 코드 폴더에 있는지 본다(예: 없는 `SocialLoginService.java`). 없으면 `unknown_refs`.
+    - **설계서에 없는 구현(extras)의 근거**: 단위 근거와 같은 방식으로 줄을 대조하고, 틀리면 `evidence_ok: false`.
+    - 결과마다 `review`(사람이 볼 이유)를 남긴다. 확인필요 판정과 위 검사에 걸린 단위를 `judge_report.json`의 `review`와 `judge_review.md`(표)에 모은다.
+12. **합치기** (`judge.merge_judgments`).
     - 단위별 결과. 앱 전체 단위가 여러 화면에서 판정되면 더 나쁜 쪽을 남긴다.
     - **기획서 항목별 집계** (`schema.aggregate_items`). 같은 항목(예: LOGIN-001 Description 3)에서 나온 단위들의 판정이 모두 같으면 그 판정, 섞이면 **부분구현**.
     - **쪼개기 신호**: 덜 쪼갬(`split_issues`), 너무 쪼갬(`merge_candidates`).
     - 기획서에 없는 구현(`extras`).
+    - **비용** (`usage`): 화면(과 파일 고르기)마다 입력·출력·생각·캐시 쓰기·캐시 읽기 토큰, 처리시간, 예상 비용(USD)과 합계. 재사용한 화면 수와 아낀 비용도 남긴다.
+
+**비용 기록과 판정 재사용**
+- 요청(시도)마다 토큰, 처리시간(`elapsed_sec`), 예상 비용(`cost_usd`)을 meta의 `calls`에 남긴다. 가격은 `cost.py`의 공식 가격표(100만 토큰당 USD, 캐시 쓰기는 5분 캐시)를 쓰고, 표에 없는 모델은 `SPECPILOT_PRICE`로 준다. ①②④도 같은 호출 함수를 써서 meta에 같은 칸이 생긴다.
+- 화면마다 **입력 해시**(`input_hash`: 프롬프트 지침 버전 + 단위·코드 분석 결과 + 코드 묶음 + 모델 설정)를 meta에 남긴다. `judge --reuse-from output/<지난 실행>`을 주면 해시가 같고 끝까지 완료된 화면은 LLM을 부르지 않고 그 판정을 다시 쓴다(근거 재확인만 다시 함). 프롬프트를 고치지 않고 코드도 그대로면 비용이 0이다. 통째로(whole) 넣는 방식은 코드 전체가 입력이라 코드 한 줄만 바뀌어도 모든 화면을 다시 부른다. 화면별 묶음이면 바뀐 파일이 든 화면만 다시 부른다.
 
 
 **코드 분석 결과 넣기 (`--facts`)**: 코드팀 정적 분석(JavaParser, tree-sitter 등)이 뽑은 사실을 `judge --facts 파일.json`으로 넘기면 화면마다 ③ 프롬프트의 `{{CODE_FACTS}}` 자리에 들어간다. 형식은 `docs/code_facts.example.json`(`common`: 모든 화면, `screens`: 화면ID → 그 화면 사실 목록). 없으면 "(없음)"이 들어가고 지금과 똑같이 돈다. 같은 실행에 `--facts`를 넣은 것과 뺀 것을 각각 채점하면 효과를 숫자로 볼 수 있다.
@@ -272,10 +284,13 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | `SPECPILOT_MARKER_MATCH_MIN` | 0.5 | 그림 마커와 설명 번호가 이 비율보다 적게 맞으면 그 쪽·화면 반려 |
 | `SPECPILOT_REJECT_RATIO` | 0.5 | 반려된 쪽·화면이 이 비율 이상이면 기획서 전체 반려 |
 | `SPECPILOT_CODE_TOKEN_LIMIT` | 100000 | ③에서 코드를 통째로 넣을 최대 크기 |
+| `SPECPILOT_SELECT_MODEL` | (비움 = `SPECPILOT_MODEL`) | ③ 화면별 파일 고르기(분류 작업)에 쓸 모델. 예: `claude-haiku-5-5` |
+| `SPECPILOT_SELECT_THINKING` | disabled | 그 모델의 생각 켜기/끄기 |
+| `SPECPILOT_PRICE` | (가격표) | 예상 비용 계산용 가격 `입력,출력,캐시쓰기,캐시읽기` (100만 토큰당 USD). 가격표에 없는 모델일 때 |
 
 5. **설치 확인** (API 키 필요 없음)
    ```bash
-   python -m pytest -q        # 73 passed (pdftotext가 없으면 일부는 skipped)
+   python -m pytest -q        # 76개 (pdftotext가 없으면 1개 skipped)
    ```
 
 Windows에서는 `python3` 대신 `python`을 쓰고, 경로에 공백이나 한글이 있으면 따옴표로 감싼다.
@@ -392,8 +407,10 @@ API를 부르지 않으므로 몇 번을 돌려도 무료다. 결과는 세 파�
 
 ### 5-3. 실험 기록표
 
-| 실행ID | 날짜 | 바꾼 것 (prompt_version) | 결함 탐지율 | 오탐 | 근거 불일치 | 판정 갈림 | 합칠 후보 | 재시도 화면 수 | 토큰 | 메모 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 실행ID | 날짜 | 바꾼 것 (prompt_version) | 결함 탐지율 | 오탐 | 근거 불일치 | 사람 확인 | 판정 갈림 | 합칠 후보 | 재시도 화면 수 | 토큰 | 시간·예상 비용 | 메모 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+토큰·시간·예상 비용은 `judge_report.json`의 `summary.usage`, 사람 확인은 `summary.needs_review`에 있다.
 
 ---
 
@@ -411,6 +428,8 @@ API를 부르지 않으므로 몇 번을 돌려도 무료다. 결과는 세 파�
 | ③ 판정이 정답과 다름 | `trace --unit` 또는 `trace --item` | 원인 질문 1~5로 단계를 가린 뒤 그 단계 수정 |
 | 근거 불일치가 많음 | `judgments.json`의 `evidence_problems` | 줄 번호를 잘못 세는지, 없는 파일을 대는지 보고 ③ 프롬프트 수정 |
 | 화면별 묶음에서 확인필요가 많음 | `judge/code_map.json` | 빠진 파일을 직접 넣고 다시 `judge` |
+| 사람 확인 목록이 김 | `judge_review.md`, 결과의 `review` | "근거가 없는 조건"이 많으면 ③이 근거의 `for`를 빠뜨리는지 본다. "닿지 않는 메서드"가 많으면 code_facts의 `_meta.screen_templates`(화면 ↔ 템플릿 대응)부터 확인 |
+| 비용이 예상보다 큼 | `judge_report.json`의 `usage.by_call` | `cache_read_ratio`가 낮으면 캐시가 안 맞는 것(화면 사이가 5분 넘게 벌어짐 등). 프롬프트·코드를 안 바꿨으면 `--reuse-from`으로 다시 돌린다 |
 | API 오류로 중간에 멈춤 | 콘솔 | 끝난 화면은 남아 있으니 `screen --screen 남은화면들`로 이어서 |
 
 **trace의 원인 질문**

@@ -57,3 +57,7 @@ class Settings:
     reject_ratio: float = field(default_factory=lambda: float(os.getenv("SPECPILOT_REJECT_RATIO", "0.5")))
     # ③: 코드 전체가 이 토큰 수 이하면 통째로(캐시), 넘으면 화면별 묶음으로 보낸다.
     code_token_limit: int = field(default_factory=lambda: int(os.getenv("SPECPILOT_CODE_TOKEN_LIMIT", "100000")))
+    # 간단한 분류 작업(③의 화면별 파일 고르기)에 쓸 모델. 비우면 SPECPILOT_MODEL을 쓴다. 예: claude-haiku-5-5
+    select_model: str = field(default_factory=lambda: os.getenv("SPECPILOT_SELECT_MODEL", "").strip())
+    # 분류 작업용 모델의 생각(thinking). 파일 목록을 보고 고르는 일이라 기본은 생각하지 않음
+    select_thinking: str = field(default_factory=lambda: os.getenv("SPECPILOT_SELECT_THINKING", "disabled").strip().lower())

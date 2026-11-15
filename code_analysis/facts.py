@@ -67,15 +67,18 @@ def check(facts: list[Fact], code: Code) -> tuple[list[Fact], list[str]]:
     return sorted(kept, key=Fact.sort_key), problems
 
 
-def write(path: Path, common: list[Fact], screens: dict[str, list[Fact]], meta: dict) -> dict:
+def write(path: Path, common: list[Fact], screens: dict[str, list[Fact]], meta: dict, reach: dict | None = None) -> dict:
     obj = {
         "_설명": "code_analysis가 만든 코드 분석 결과. judge --facts 로 넘긴다. common은 모든 화면에, "
                 "screens의 목록은 그 화면 ③에만 들어간다. 파일 경로는 judge --code 로 준 폴더 기준 상대 경로이고 "
-                "줄 번호는 ③ 코드 묶음의 \"줄번호|\"와 같다.",
+                "줄 번호는 ③ 코드 묶음의 \"줄번호|\"와 같다. reach는 프롬프트에 넣지 않고, ③이 판정한 뒤 프로그램이 "
+                "근거가 그 화면의 처리 과정에서 닿는 코드인지 다시 확인하는 데 쓴다.",
         "_meta": meta,
         "common": [f.out() for f in sorted(common, key=Fact.sort_key)],
         "screens": {sid: [f.out() for f in sorted(fs, key=Fact.sort_key)] for sid, fs in sorted(screens.items())},
     }
+    if reach is not None:
+        obj["reach"] = reach
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return obj

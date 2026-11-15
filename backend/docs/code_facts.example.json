@@ -10,5 +10,20 @@
       {"kind": "template", "file": "src/main/resources/templates/qna/write.html", "line": 14, "fact": "모델 값 errorMessage를 넘기지만 템플릿에서 출력하지 않음"},
       {"kind": "js", "file": "src/main/resources/static/js/qna.js", "line": 8, "fact": "제목 빈 값 검사는 submit 때만 실행 (blur 없음)"}
     ]
+  },
+  "reach": {
+    "_설명": "선택. ③ 프롬프트에는 넣지 않고, 판정 뒤 프로그램이 근거를 다시 확인할 때 쓴다 (specpilot/grounding.py). code_analysis가 만든다.",
+    "methods": [
+      {"name": "QnaController.create", "file": "src/main/java/demo/controller/QnaController.java", "start": 29, "end": 41},
+      {"name": "QnaService.create", "file": "src/main/java/demo/service/QnaService.java", "start": 17, "end": 23}
+    ],
+    "screens": {
+      "QNA-002": {"methods": ["QnaController.create", "QnaService.create"],
+                  "files": ["src/main/java/demo/controller/QnaController.java", "src/main/java/demo/service/QnaService.java",
+                            "src/main/resources/templates/qna/write.html", "src/main/resources/static/js/qna.js"]}
+    },
+    "unused": [
+      {"file": "src/main/java/demo/controller/QnaController.java", "start": 48, "end": 52, "label": "POST /qna/check(QnaController.check): 어디에서도 이 주소를 부르지 않음 (미사용 후보)"}
+    ]
   }
 }
