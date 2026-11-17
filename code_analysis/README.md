@@ -14,7 +14,7 @@
 ## 입력과 출력
 
 - 입력: 샘플 코드 폴더 경로. 기업 자료라 저장소에 넣지 않고 각자 PC에 둔다 (예: `backend/inputs/sample-code`)
-- 출력: `code_analysis/out/` (기업 코드에서 뽑은 내용이라 커밋하지 않는다. `out/.gitignore`가 막음)
+- 출력: `code_analysis/out/` (기업 코드에서 뽑은 내용이라 커밋하지 않는다. 저장소 루트 `.gitignore`의 `code_analysis/out/`이 막음)
   - `code_facts.json`: ③에 넘기는 파일. 형식은 `backend/docs/code_facts.example.json`과 같다
     (`common`: 모든 화면 / `screens`: 화면 ID → 그 화면 사실 목록, 사실 하나는 `{"kind", "file", "line", "fact"}`)
   - `backend-analysis.json`, `frontend-js.json`: 중간 결과. 사실이 이상할 때 원인을 찾는 용도
