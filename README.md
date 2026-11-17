@@ -41,3 +41,5 @@ npm run dev
 명령어로 돌려 둔 결과(`backend/output/`)도 웹의 "최근 분석"에 그대로 보인다. 자세한 내용은 [`backend/README.md`](backend/README.md#웹으로-시연-specpilotserverpy).
 
 팀 작업 규칙(브랜치·PR): [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
+개발 과정에서 AI 코딩 도구(Claude)를 함께 사용했다.
