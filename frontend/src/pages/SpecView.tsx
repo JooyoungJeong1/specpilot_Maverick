@@ -1,11 +1,14 @@
 // 테스트 사양서 (CLAUDE.md 5장 /spec). 초안 local/reference/app.html의 specView()를 옮겼다.
 // 엑셀 모양 미리보기. 시트와 열은 내려받는 기업 양식 xlsx와 같다 (lib/sheets.ts, 백엔드 excel.py). 판정 결과는 넣지 않는다.
 // 내려받기는 백엔드가 만든 테스트사양서.xlsx(서식 포함)가 있으면 그 파일, 없으면 브라우저에서 만든다.
+// "근거 요구사항" 칸의 ID를 누르면 화면별 보기의 그 판정 카드로 간다 (테스트 → 요구사항 추적).
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCurrentRun, useRunFile } from '../api/useRun.ts'
 import { downloadFile, downloadWorkbook } from '../components/xlsx.ts'
 import { runLabel } from '../lib/format.ts'
-import { EXPORT_KINDS, exportFileName, SPEC_FIRST_MENU, specSheets } from '../lib/sheets.ts'
+import { EXPORT_KINDS, exportFileName, SPEC_FIRST_MENU, specSheets, type Cell } from '../lib/sheets.ts'
+import { unitLinks } from '../lib/table.ts'
 
 /**
  * 열 모양. 초안은 시험번호·시험데이터·근거 요구사항을 모두 줄바꿈 없이(td.tc) 그렸는데,
@@ -18,6 +21,19 @@ const COL_CLASS: Record<string, string> = {
   시험절차: 'wide', 예상결과: 'wide', 질문: 'wide', 이유: 'wide',
 }
 const SPEC_FILE = EXPORT_KINDS.find((k) => k.kind === 'spec')?.backend
+const UNIT_COL = '근거 요구사항'
+
+/** 근거 요구사항 칸: ID마다 판정 카드로 가는 링크 */
+function UnitCell({ cell, screenOf }: { cell: Cell; screenOf: ReadonlyMap<string, string> }) {
+  const links = unitLinks(String(cell), screenOf)
+  if (!links.length) return <>{cell}</>
+  return links.map((l, i) => (
+    <span key={l.id}>
+      {i > 0 && ', '}
+      <span className="nw">{l.path ? <Link to={l.path} title="이 요구사항의 판정 보기">{l.id}</Link> : l.id}</span>
+    </span>
+  ))
+}
 
 export default function SpecView() {
   const { run, isLoading, error } = useCurrentRun()
@@ -25,6 +41,7 @@ export default function SpecView() {
   const [busy, setBusy] = useState(false)
   const specFile = useRunFile(run?.id, SPEC_FILE)
   const sheets = useMemo(() => (run?.scenarios ? specSheets(run.scenarios) : null), [run])
+  const screenOf = useMemo(() => new Map(run?.requirements.units.map((u) => [u.id, u.screen_id])), [run])
 
   if (error) return <div className="tv"><div className="empty">결과를 불러오지 못했습니다. {String(error)}</div></div>
   if (isLoading || !run) return <div className="tv"><div className="empty">불러오는 중…</div></div>
@@ -69,7 +86,11 @@ export default function SpecView() {
               <thead><tr>{sheet.header.map((h) => <th key={h}>{h}</th>)}</tr></thead>
               <tbody>
                 {sheet.rows.map((row, i) => (
-                  <tr key={i}>{row.map((c, j) => <td key={j} className={COL_CLASS[sheet.header[j]]}>{c}</td>)}</tr>
+                  <tr key={i}>{row.map((c, j) => (
+                    <td key={j} className={COL_CLASS[sheet.header[j]]}>
+                      {sheet.header[j] === UNIT_COL ? <UnitCell cell={c} screenOf={screenOf} /> : c}
+                    </td>
+                  ))}</tr>
                 ))}
               </tbody>
             </table>

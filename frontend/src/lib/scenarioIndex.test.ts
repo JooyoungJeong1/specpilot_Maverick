@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { stepsByUnit } from './scenarioIndex.ts'
+import { stepDomId, stepsByUnit } from './scenarioIndex.ts'
 import { scenarios } from './testFixtures.ts'
+
+describe('stepDomId', () => {
+  it('시나리오와 단계 번호로 만든다', () => {
+    expect(stepDomId('TC-QNA-002-01', 2)).toBe('step-TC-QNA-002-01-2')
+  })
+})
 
 describe('stepsByUnit', () => {
   const index = stepsByUnit(scenarios)

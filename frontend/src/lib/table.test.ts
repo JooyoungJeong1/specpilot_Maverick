@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { groupByScreen } from './screens.ts'
 import {
-  cardPath, filterItemRows, filterUnitRows, itemQuote, itemRows, itemTarget, sortByStatus, splitItemKey, unitRows,
+  appTablePath, cardPath, filterItemRows, filterUnitRows, itemQuote, itemRows, itemTarget, sortByStatus, splitItemKey, unitLinks,
+  unitPath, unitRows,
   type TableFilters,
 } from './table.ts'
 import { judgments, requirements } from './testFixtures.ts'
@@ -81,5 +82,36 @@ describe('sortByStatus', () => {
 describe('cardPath', () => {
   it('화면과 단위를 주소에 담는다', () => {
     expect(cardPath('QNA-002', 'REQ-QNA-002-03')).toBe('/screen/QNA-002?unit=REQ-QNA-002-03')
+  })
+})
+
+describe('unitPath', () => {
+  it('화면 요구사항은 화면별 보기의 카드로', () => {
+    expect(unitPath('QNA-002', 'REQ-QNA-002-03')).toBe('/screen/QNA-002?unit=REQ-QNA-002-03')
+  })
+
+  it('앱 전체 요구사항은 요구사항 표에서 그 ID로 검색해 둔다', () => {
+    expect(unitPath('APP', 'REQ-APP-01')).toBe('/table?screen=APP&q=REQ-APP-01')
+    expect(appTablePath()).toBe('/table?screen=APP')
+  })
+})
+
+describe('unitLinks', () => {
+  const screenOf = new Map([['REQ-QNA-002-03', 'QNA-002'], ['REQ-APP-01', 'APP']])
+
+  it('칸의 ID마다 판정 카드 주소를 붙인다', () => {
+    expect(unitLinks('REQ-QNA-002-03, REQ-APP-01', screenOf)).toEqual([
+      { id: 'REQ-QNA-002-03', path: '/screen/QNA-002?unit=REQ-QNA-002-03' },
+      { id: 'REQ-APP-01', path: '/table?screen=APP&q=REQ-APP-01' },
+    ])
+  })
+
+  it('결과에 없는 ID는 주소 없이', () => {
+    expect(unitLinks('REQ-X-01', screenOf)).toEqual([{ id: 'REQ-X-01', path: null }])
+  })
+
+  it('빈 칸("-")은 빈 목록', () => {
+    expect(unitLinks('-', screenOf)).toEqual([])
+    expect(unitLinks('', screenOf)).toEqual([])
   })
 })

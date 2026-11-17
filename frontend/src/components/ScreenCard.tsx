@@ -7,9 +7,10 @@ import StackBar from './StackBar.tsx'
 import { usePageImage } from './usePdf.ts'
 
 interface Props {
+  /** 기획서 화면 (앱 전체는 카드로 만들지 않는다) */
   group: ScreenGroup
-  /** 기획서 순서 번호 (1부터). 앱 전체는 null */
-  no: number | null
+  /** 기획서 순서 번호 (1부터) */
+  no: number
   pdfUrl: string | null
 }
 
@@ -23,13 +24,11 @@ export default function ScreenCard({ group: g, no, pdfUrl }: Props) {
 
   return (
     <Link className={cls} to={`/screen/${g.id}`}>
-      {g.isApp
-        ? <div className="thumb appt">여러 화면에 걸친 요구사항과 질문<span className="no">전체</span></div>
-        : <div className="thumb" style={thumb ? { backgroundImage: `url(${thumb})` } : undefined}>
-            <span className="no">{no}</span>
-          </div>}
+      <div className="thumb" style={thumb ? { backgroundImage: `url(${thumb})` } : undefined}>
+        <span className="no">{no}</span>
+      </div>
       <div className="body">
-        <span className="id">{g.isApp ? 'REQ-APP · 앱 프로필' : [g.id, formatPages(g.meta?.pages)].filter(Boolean).join(' · ')}</span>
+        <span className="id">{[g.id, formatPages(g.meta?.pages)].filter(Boolean).join(' · ')}</span>
         <b>{g.name}</b>
         {rejected
           ? <p className="rej-why"><span className="pill p-반려">반려</span>{g.rejectReason}</p>
