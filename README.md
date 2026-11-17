@@ -23,7 +23,7 @@
 - 코드 분석 모듈: [`code_analysis/README.md`](code_analysis/README.md)
 - 웹 화면: [`frontend/README.md`](frontend/README.md)
 
-## 웹으로 시연 (조장 PC)
+## 웹으로 시연
 
 웹에서 기획서 PDF와 소스 코드를 올리면 ①~④가 실제로 돈다. 터미널 두 개를 연다.
 
@@ -40,11 +40,4 @@ npm run dev
 터미널 2에 찍힌 주소를 열고 "새로 분석하기" → 기획서 PDF와 코드 zip을 올려 "분석 시작" → 진행 화면 → "결과 보기".
 명령어로 돌려 둔 결과(`backend/output/`)도 웹의 "최근 분석"에 그대로 보인다. 자세한 내용은 [`backend/README.md`](backend/README.md#웹으로-시연-specpilotserverpy).
 
-## 공통 규칙
-
-1. **실행은 조장 PC에서만 한다.** 조원은 파일을 고쳐 PR을 올리고, 조장이 돌려서 결과와 점수를 공유한다.
-2. **main에 바로 push 금지.** 브랜치를 만들어 작업하고 PR을 올린다. 조장이 확인 후 merge.
-   - 브랜치 이름: `prompt/...`, `judge/...`, `scenario/...`, `code/...`, `front/...`
-3. PR 설명에는 **바꾼 것 / 이유 / 어느 화면(또는 항목)을 보고 고쳤는지**를 적는다.
-4. 작업 시작 전에 `git pull`로 최신 코드를 받는다.
-5. `.env`, `inputs/`, `output/`은 올리지 않는다(`.gitignore`가 막음).
+팀 작업 규칙(브랜치·PR): [`CONTRIBUTING.md`](CONTRIBUTING.md)
