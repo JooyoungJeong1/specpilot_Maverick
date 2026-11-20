@@ -1,4 +1,4 @@
-"""③ 근거 재확인(grounding.py), 비용 기록(cost.py), 판정 재사용(--reuse-from), 가벼운 모델 분리 테스트.
+"""③ 근거 재확인(grounding.py), 비용 기록(cost.py), 판정 재사용(--reuse-from) 테스트.
 
 API 키 필요 없음. 코드와 문구는 모두 지어낸 것이다 (실제 샘플 코드의 결함을 넣지 않는다).
 """
@@ -8,7 +8,7 @@ import pytest
 
 from specpilot import code_prep, cost, grounding
 from specpilot.config import Settings
-from specpilot.judge import build_code_map, judge_screen, merge_judgments, units_by_screen
+from specpilot.judge import judge_screen, merge_judgments, units_by_screen
 from specpilot.llm import LLMResult, ScriptedLLM
 from specpilot.prompts import PromptSet
 from specpilot.stages import RunContext, write_json
@@ -247,21 +247,6 @@ def test_reuse_from_previous_run_skips_llm(tmp_path, code_root):
     c3 = ctx_for(make_run(tmp_path, "third"), ScriptedLLM([json.dumps(ANSWER, ensure_ascii=False)]))
     m3 = judge_screen(c3, cb, "NOTE-002", changed, None, reach=reach, reuse_dir=first)
     assert len(c3.llm.calls) == 1 and not m3.get("reused_from")
-
-
-def test_code_select_uses_light_model(tmp_path, code_root):
-    cb = code_prep.load_codebase(code_root)
-    rd = make_run(tmp_path)
-    req = json.loads((rd / "requirements.json").read_text(encoding="utf-8"))
-    c = ctx_for(rd, ScriptedLLM([]))
-    c.settings.select_model = "claude-haiku-5-5"
-    c.llm_light = UsageLLM([json.dumps({"mapping": [{"screen_id": "NOTE-002", "files": [FORM, "없는/파일.java"]}],
-                                        "common_files": []})])
-    cmap = build_code_map(c, cb, req, units_by_screen(req))
-    assert cmap["mapping"][0]["files"] == [FORM] and len(c.llm_light.calls) == 1 and c.llm.calls == []
-    meta = json.loads((rd / "judge/code_map.meta.json").read_text(encoding="utf-8"))
-    assert meta["model"] == "claude-haiku-5-5"
-    assert meta["cost_usd"] == pytest.approx((1000 * 0.10 + 500 * 0.50 + 20000 * 0.125) / 1e6)
 
 
 def test_bundle_adds_reached_files(code_root):

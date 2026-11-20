@@ -75,7 +75,7 @@ requirements.json ─(scenario)─▶ ④ scenario/묶음ID.json ─(합치기)�
 specpilot-backend/
   prompts/          프롬프트 문장 (코드 아님. 프롬프트 담당이 고치는 곳)
   specpilot/        파이썬 코드
-  tests/            API 키 없이 돌아가는 테스트 76개
+  tests/            API 키 없이 돌아가는 테스트 79개
   docs/             이 문서, 프롬프트 변경 정리, 정답 세트 형식 예시
 ```
 
@@ -193,14 +193,20 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | --- | --- |
 | 입력 | `requirements.json` + 소스 코드 폴더 |
 | 출력 | `judge/화면ID.json`(+ meta), `judge/run.json`, `judge/code_map.json`(화면별 묶음일 때), `judgments.json`, `judge_report.json`, `judge_review.md`(사람 확인 목록) |
-| 프롬프트 | `prompts/judge.txt` + 예시(`examples/judge_example.json`), 화면별 묶음일 때 `prompts/code_select.txt` |
+| 프롬프트 | `prompts/judge.txt` + 예시(`examples/judge_example.json`). LLM 호출은 화면마다 판정 한 번뿐이다 |
 
 **처리 순서**
 1. **코드 모으기** (`code_prep.load_codebase`). 코드 확장자(.java .js .html .yml 등)만 모으고, 테스트·빌드 산출물·라이브러리 폴더(test, build, target, node_modules, gradle 등), `.min.js`, 300KB 넘는 파일은 뺀다.
 2. **줄 번호 붙이기.** 파일마다 `=== 파일경로 ===` 머리글을 달고 줄마다 `줄번호|`를 붙인다. 줄마다 경로를 붙이면 경로가 긴 Java 프로젝트에서 토큰이 세 배 가까이 늘어서(샘플 기준 약 8.5만 → 3.4만), 경로는 머리글에 한 번만 쓴다.
 3. **크기 재기 → 넣는 방식 고르기** (`judge.choose_mode`). 코드 전체가 `SPECPILOT_CODE_TOKEN_LIMIT`(기본 10만) 이하면 **통째로**(whole), 넘으면 **화면별 묶음**(screen). `--mode`로 강제할 수 있다.
 4. **단위 나누기** (`judge.units_by_screen`). 화면 단위는 그 화면으로 보낸다. 앱 전체 단위(REQ-APP-…)는 근거에 화면 ID가 나오는 화면마다 보내고, 어느 화면도 언급하지 않으면 `APP` 묶음으로 모은다(`--screens APP`으로 따로 돌릴 수 있음).
-5. (screen 방식일 때만) **화면-코드 대응표** (`judge.build_code_map`). LLM이 파일 목록을 보고 화면마다 파일을 고른다. 목록에 없는 경로는 버리고 `judge/code_map.json`에 저장한다. **이 파일은 사람이 고쳐도 되고, 있으면 다시 만들지 않는다.** 여기에 프로그램이 단위의 문구(앞 6글자)가 들어 있는 파일과, `--facts`의 도달 정보(`reach`)가 그 화면에서 닿는다고 본 파일(화면 → 경로 → Controller → Service → Repository)을 더한다. 파일 고르기는 분류 작업이라 `SPECPILOT_SELECT_MODEL`로 가벼운 모델을 쓸 수 있다.
+5. (screen 방식일 때만) **화면-코드 대응표** (`judge.build_code_map` → `code_scope.select`). **프로그램이 고르고 LLM을 부르지 않는다.**
+   - 씨앗: `--facts`의 도달 정보(`reach`: 화면 → 경로 → Controller → Service → Repository), 단위의 exact 문구·대상·값과 화면 이름의 앞 6글자(공백·기호 제외)가 들어 있는 파일. 팝업·반복 화면은 부모 화면(repeats_from, 이름의 괄호 앞, 같은 depth의 앞 화면)의 씨앗도 쓴다.
+   - 참조 따라가기(3단계): 템플릿 → 불러오는 JS·CSS, 포함 조각, 그 화면 이름을 반환하는 컨트롤러 / Java → 본문에 나오는 이 프로젝트의 클래스, 인터페이스면 구현 클래스. 씨앗이 Java면 그 클래스를 쓰는 Java로 한 번 거슬러 올라간다(문구가 서비스·폼에만 있을 때 컨트롤러 → 템플릿까지 가도록).
+   - 공통 파일: `@Configuration`·`SecurityFilterChain`·`@ControllerAdvice`가 있는 Java, `application.yml/properties`.
+   - 화면 묶음이 `SPECPILOT_CODE_TOKEN_LIMIT`를 넘으면 먼 참조부터 뺀다(`dropped_over_limit`).
+   - `judge/code_map.json`에 화면마다 파일과 들어간 이유(`why`)를 남긴다. **이 파일은 사람이 고쳐도 되고, 있으면 다시 만들지 않는다.**
+   - 샘플 코드(약 3.4만 토큰)로 재 보면 화면마다 1.7만~2.3만 토큰, 모든 화면이 자기 템플릿과 컨트롤러를 찾았다. 샘플은 10만 토큰 아래라 실제로는 통째로(whole) 넣는다.
 6. **판정 호출.** 코드 묶음을 첫 블록(캐시)으로, 화면 ID와 단위 목록을 그다음에 넣는다. 화면별 묶음이면 "필요한 코드가 묶음에 없어 보이면 미구현이 아니라 확인필요로 하라"고 알려 준다.
 7. **검사** (`schema.validate_judge`). 받은 단위마다 결과가 하나씩 있는지, status가 구현/불일치/미구현/확인필요 중 하나인지, 구현·불일치에 근거 코드가 있는지. 빠진 단위가 있으면 재시도한다.
 8. **근거 줄 대조** (`code_prep.verify_evidence`). LLM이 댄 `파일:줄`에 인용한 코드가 정말 있는지 본다(공백 차이는 무시). 적은 줄에 없어도 **위아래 2줄 안에 같은 코드가 있으면** 지어낸 근거가 아니라 줄 번호를 잘못 센 것으로 보고, 판정은 그대로 두고 근거의 `line`을 고친다(원래 번호는 `line_reported`, 고친 내용은 결과의 `evidence_fixes`). 그 밖에 틀리면 구현·불일치를 **확인필요로 내리고** 원래 판정을 `original_status`에 남긴다. 10/27 실행에서 근거 불일치 9건 중 8건이 1줄 차이(애노테이션 줄과 메서드 선언 줄 혼동)였다.
@@ -284,13 +290,11 @@ LLM을 쓰지 않는다. 이어 붙이고 검사하는 일이라 프로그램이
 | `SPECPILOT_MARKER_MATCH_MIN` | 0.5 | 그림 마커와 설명 번호가 이 비율보다 적게 맞으면 그 쪽·화면 반려 |
 | `SPECPILOT_REJECT_RATIO` | 0.5 | 반려된 쪽·화면이 이 비율 이상이면 기획서 전체 반려 |
 | `SPECPILOT_CODE_TOKEN_LIMIT` | 100000 | ③에서 코드를 통째로 넣을 최대 크기 |
-| `SPECPILOT_SELECT_MODEL` | (비움 = `SPECPILOT_MODEL`) | ③ 화면별 파일 고르기(분류 작업)에 쓸 모델. 예: `claude-haiku-5-5` |
-| `SPECPILOT_SELECT_THINKING` | disabled | 그 모델의 생각 켜기/끄기 |
 | `SPECPILOT_PRICE` | (가격표) | 예상 비용 계산용 가격 `입력,출력,캐시쓰기,캐시읽기` (100만 토큰당 USD). 가격표에 없는 모델일 때 |
 
 5. **설치 확인** (API 키 필요 없음)
    ```bash
-   python -m pytest -q        # 76개 (pdftotext가 없으면 1개 skipped)
+   python -m pytest -q        # 79개 (pdftotext가 없으면 1개 skipped)
    ```
 
 Windows에서는 `python3` 대신 `python`을 쓰고, 경로에 공백이나 한글이 있으면 따옴표로 감싼다.
@@ -427,7 +431,7 @@ API를 부르지 않으므로 몇 번을 돌려도 무료다. 결과는 세 파�
 | 커버리지 누락이 이상함 | meta의 `expected_items` vs 기획서 | pdftotext가 설치됐는지(`text_extractor`) 확인. 그래도 이상하면 `SPECPILOT_COVERAGE_STRICT=false` |
 | ③ 판정이 정답과 다름 | `trace --unit` 또는 `trace --item` | 원인 질문 1~5로 단계를 가린 뒤 그 단계 수정 |
 | 근거 불일치가 많음 | `judgments.json`의 `evidence_problems` | 줄 번호를 잘못 세는지, 없는 파일을 대는지 보고 ③ 프롬프트 수정 |
-| 화면별 묶음에서 확인필요가 많음 | `judge/code_map.json` | 빠진 파일을 직접 넣고 다시 `judge` |
+| 화면별 묶음에서 확인필요가 많음 | `judge/code_map.json`의 `why`, `dropped_over_limit`, `unmapped_screens` | 빠진 파일을 직접 넣고 다시 `judge`. `--facts`를 주면 도달 정보로 씨앗이 늘어난다 |
 | 사람 확인 목록이 김 | `judge_review.md`, 결과의 `review` | "근거가 없는 조건"이 많으면 ③이 근거의 `for`를 빠뜨리는지 본다. "닿지 않는 메서드"가 많으면 code_facts의 `_meta.screen_templates`(화면 ↔ 템플릿 대응)부터 확인 |
 | 비용이 예상보다 큼 | `judge_report.json`의 `usage.by_call` | `cache_read_ratio`가 낮으면 캐시가 안 맞는 것(화면 사이가 5분 넘게 벌어짐 등). 프롬프트·코드를 안 바꿨으면 `--reuse-from`으로 다시 돌린다 |
 | API 오류로 중간에 멈춤 | 콘솔 | 끝난 화면은 남아 있으니 `screen --screen 남은화면들`로 이어서 |

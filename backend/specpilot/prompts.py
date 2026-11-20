@@ -17,7 +17,6 @@ TEMPLATES = {
     "app_profile": "app_profile.txt",
     "screen_decompose": "screen_decompose.txt",
     "judge": "judge.txt",
-    "code_select": "code_select.txt",
     "scenario": "scenario.txt",
 }
 

@@ -152,7 +152,7 @@ LLM 검사를 앞에 따로 두지 않은 이유는 [`docs/GUIDE.md`](docs/GUIDE
 
 1. **코드 모으기**: 코드 확장자만, 테스트·빌드 산출물·라이브러리·`.min.js`는 뺀다.
 2. **크기 재기**: `SPECPILOT_CODE_TOKEN_LIMIT`(기본 10만) 이하면 **통째로**(화면마다 같은 코드라 캐시됨), 넘으면 **화면별 묶음**.
-3. **화면별 묶음**: LLM이 파일 목록을 보고 화면마다 파일을 고르고(`code_map.json`), 프로그램이 단위의 문구가 들어 있는 파일을 더한다.
+3. **화면별 묶음**: 프로그램이 화면마다 파일을 고른다(`code_scope.py`, LLM 호출 없음). 단위 문구·화면 이름이 든 파일과 code_analysis의 도달 정보에서 출발해 템플릿 → JS·CSS·컨트롤러, Java → 쓰는 클래스로 참조를 따라가고, 결과와 이유를 `code_map.json`에 남긴다.
 4. **근거 줄 대조**: LLM이 댄 `파일:줄`에 그 코드가 실제로 있는지 본다. 없으면 구현·불일치를 확인필요로 내린다(`original_status`에 원래 판정을 남김).
 5. **띄어쓰기**: 문구가 띄어쓰기만 다르면 불일치가 아니라 구현으로 본다(원래 판정을 남김).
 6. **항목별 집계**: 같은 기획서 항목에서 나온 단위들의 판정이 섞이면 부분구현.
@@ -200,7 +200,7 @@ npm run dev
 | --- | --- |
 | `app_profile.txt` | 프롬프트 ① |
 | `screen_decompose.txt` | 프롬프트 ② (예시 1·2의 입력 화면 글자 포함) |
-| `judge.txt`, `code_select.txt` | 프롬프트 ③ (판정, 화면별 코드 고르기) |
+| `judge.txt` | 프롬프트 ③ (판정) |
 | `scenario.txt` | 프롬프트 ④ (시나리오 합성). 예시는 `examples/scenario_example.json` |
 | `blocks/reading_guide.txt` · `implied_rule.txt` · `unit_schema.txt` | 공통 블록 (①②에 같이 들어감) |
 | `examples/*.json` | 출력 예시 (테스트의 정상 입력으로도 쓰임. 예시 quote가 예시 입력 글자에 그대로 있는지도 테스트함) |

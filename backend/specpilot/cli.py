@@ -223,9 +223,6 @@ def cmd_judge(args) -> int:
         return 2
     ctx = RunContext(run_dir, run_dir / "input.pdf", settings, PromptSet(settings.prompts_dir),
                      _make_llm(settings, args.dry_run))
-    if settings.select_model and not args.dry_run and settings.select_model != settings.model:
-        from .llm import AnthropicLLM     # 파일 고르기(분류 작업)는 가벼운 모델로
-        ctx.llm_light = AnthropicLLM(settings.select_model, settings.select_thinking, "")
     only = set(args.screens.split(",")) if args.screens else None
     try:
         report = run_judge(ctx, Path(args.code), only, args.mode,

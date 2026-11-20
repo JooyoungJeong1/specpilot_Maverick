@@ -2,12 +2,13 @@
 
 코드를 넣는 방식은 크기를 재서 정한다.
 - whole : 코드 전체를 화면마다 같이 넣는다 (캐시돼서 두 번째 화면부터 싸다). 놓치는 파일이 없다.
-- screen: 화면마다 관련 파일만 넣는다. 관련 파일은 LLM이 파일 목록을 보고 고르고(code_map.json),
-          프로그램이 단위의 문구가 들어 있는 파일과 정적 분석이 그 화면에서 닿는다고 본 파일(code_facts의 reach)을 더한다.
-          사람이 code_map.json을 고쳐도 된다.
+- screen: 화면마다 관련 파일만 넣는다. 관련 파일은 프로그램이 고른다(code_scope.py, LLM 호출 없음):
+          정적 분석이 그 화면에서 닿는다고 본 파일(code_facts의 reach)과 단위 문구가 든 파일에서 출발해
+          템플릿 → JS·CSS·포함 조각·컨트롤러, Java → 쓰는 클래스로 참조를 따라간다. 결과는 judge/code_map.json(파일마다 이유),
+          사람이 고쳐도 된다. 그래서 ③의 LLM 호출은 화면마다 판정 한 번뿐이다.
 
 비용: 화면마다 입력 해시(프롬프트 버전 + 입력 + 코드 묶음 + 모델 설정)를 남기고, --reuse-from으로 지난 실행을 주면
-해시가 같은 화면은 LLM을 부르지 않고 지난 판정을 다시 쓴다. 파일 고르기는 SPECPILOT_SELECT_MODEL로 가벼운 모델을 쓸 수 있다.
+해시가 같은 화면은 LLM을 부르지 않고 지난 판정을 다시 쓴다.
 요청마다 토큰·처리시간·예상 비용은 meta에, 합계는 judge_report.json의 usage에 남는다.
 
 근거 재확인(grounding.py): 근거 줄 대조에 더해, 근거가 그 화면의 처리 과정에서 닿는 코드인지, 조건마다 근거가 있는지,
@@ -17,10 +18,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 from pathlib import Path
 
-from . import code_prep, cost, grounding, pdf_utils, schema
+from . import code_prep, code_scope, cost, grounding, pdf_utils, schema
 from .code_prep import Codebase
 from .stages import (STATUS_DONE, STATUS_DRY, STATUS_FAILED, STATUS_REVIEW, RunContext,
                      _call_with_retry, _write_preview, read_json, write_json)
@@ -133,60 +133,20 @@ def choose_mode(settings, cb: Codebase, forced: str | None) -> str:
 
 
 def build_code_map(ctx: RunContext, cb: Codebase, requirements: dict, units: dict[str, list[dict]],
-                   reuse_dir: Path | None = None) -> dict:
+                   reach: grounding.Reach | None = None) -> dict:
+    """화면별 묶음에 넣을 파일. 프로그램이 고른다 (code_scope.py, LLM 호출 없음)."""
     path = ctx.run_dir / "judge" / "code_map.json"
     if path.exists():                       # 사람이 고친 대응표가 있으면 그대로 쓴다
         return read_json(path)
-    screens = []
-    for s in requirements["app_profile"].get("screens", []):
-        us = units.get(s["screen_id"], [])
-        labels = []
-        for u in us:
-            ex = u.get("exact") or {}
-            labels += [ex.get("message"), ex.get("target")] + list(ex.get("values") or [])
-        screens.append({"screen_id": s["screen_id"], "name": s.get("name"), "depth": s.get("depth"),
-                        "labels": [l for l in dict.fromkeys(labels) if l][:15]})
-    rendered = ctx.prompts.render(
-        "code_select",
-        SCREENS=json.dumps(screens, ensure_ascii=False),
-        FILE_INDEX=json.dumps(code_prep.file_index(cb), ensure_ascii=False),
-    )
-    if ctx.dry_run:
-        _write_preview(ctx, "code_select", rendered, "없음")
-        return {"mapping": [], "common_files": []}
-    h = input_hash(rendered, "", ctx.settings, ctx.settings.select_model or None)
-    hit = _reusable(reuse_dir, "code_map", h)
-    if hit:                                 # 파일 목록과 화면이 같으면 지난 대응표를 그대로 쓴다
-        shutil.copyfile(hit[0], path)
-        write_json(ctx.run_dir / "judge" / "code_map.meta.json", _reused_meta(read_json(hit[1]), reuse_dir))
-        return read_json(path)
-
-    def validate(o):
-        issues = []
-        if not isinstance(o.get("mapping"), list):
-            issues.append(schema.Issue("error", "code_map", "mapping이 목록이 아닙니다"))
-        return issues
-
-    obj, issues, meta = _call_with_retry(ctx, "code_select", rendered, [{"type": "text", "text": rendered.user_input}],
-                                         validate, light=True)     # 파일 고르기는 분류 작업이라 가벼운 모델을 쓸 수 있다
-    if obj is None or schema.errors(issues):
-        raise RuntimeError("화면-코드 대응표를 만들지 못했습니다. --mode whole로 돌리거나 judge/code_map.json을 직접 만드세요")
-    unknown = []
-    for m in obj.get("mapping", []):
-        kept = [f for f in m.get("files", []) if f in cb.files]
-        unknown += [f for f in m.get("files", []) if f not in cb.files]
-        m["files"] = kept
-    obj["common_files"] = [f for f in obj.get("common_files", []) if f in cb.files]
-    obj["_dropped_unknown_files"] = unknown
+    obj = code_scope.select(cb, requirements, units, reach if reach is not None and reach.screens else None,
+                            ctx.settings.code_token_limit)
     write_json(path, obj)
-    meta.update(screen_id="code_map", status=STATUS_DONE, input_hash=h)
-    write_json(ctx.run_dir / "judge" / "code_map.meta.json", meta)
     return obj
 
 
 def bundle_for(sid: str, units: list[dict], cb: Codebase, code_map: dict,
                reach: grounding.Reach | None = None) -> list[str]:
-    """LLM이 고른 파일 + 단위 문구가 든 파일 + 정적 분석이 그 화면에서 닿는다고 본 파일."""
+    """code_map(프로그램이 고른 파일) + 단위 문구가 든 파일 + 정적 분석이 그 화면에서 닿는다고 본 파일."""
     files = set(code_map.get("common_files", []))
     for m in code_map.get("mapping", []):
         if m.get("screen_id") == sid:
@@ -330,12 +290,12 @@ def run_judge(ctx: RunContext, code_root: Path, only: set[str] | None = None, mo
         "code_files": len(cb.files), "code_tokens": cb.tokens(), "token_limit": ctx.settings.code_token_limit,
         "facts_file": str(Path(facts_path).resolve()) if facts_path else None,
         "reach": reach.ok, "reuse_from": str(Path(reuse_from).resolve()) if reuse_from else None,
-        "model": ctx.settings.model, "select_model": ctx.settings.select_model or ctx.settings.model,
+        "model": ctx.settings.model,
     })
     log(f"  ③ 코드 {len(cb.files)}개 파일, 약 {cb.tokens():,}토큰 → {'전체를 넣음' if chosen == 'whole' else '화면별 묶음'}"
         + (f" · 코드 분석 결과 사용 ({facts_path})" if facts else ""))
 
-    code_map = build_code_map(ctx, cb, requirements, units, reuse_from) if chosen == "screen" else None
+    code_map = build_code_map(ctx, cb, requirements, units, reach) if chosen == "screen" else None
     for sid, us in units.items():
         if only and sid not in only:
             continue
