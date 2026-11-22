@@ -5,6 +5,7 @@ import { useCurrentRun, usePdfUrl } from '../api/useRun.ts'
 import { useLayout } from '../components/layoutContext.ts'
 import ScreenCard from '../components/ScreenCard.tsx'
 import StackBar from '../components/StackBar.tsx'
+import UsageCard from '../components/UsageCard.tsx'
 import { groupByScreen, questionScope } from '../lib/screens.ts'
 import { overview, sortByPriority, sortGroups, statusClass, visibleGroups, type SortMode } from '../lib/summary.ts'
 import { appTablePath } from '../lib/table.ts'
@@ -102,6 +103,8 @@ export default function Summary() {
           })}
         </section>
       </div>
+
+      {run.report && <UsageCard usage={run.report.usage} screens={screens.map((g) => ({ id: g.id, name: g.name }))} />}
     </div>
   )
 }
