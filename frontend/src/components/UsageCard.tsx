@@ -1,4 +1,4 @@
-// 요약 화면 아래 "③ 판정 비용 · 처리시간" 카드. judge_report.json의 usage를 그대로 보여 준다 (비용 계산은 백엔드 cost.py).
+// 요약 화면 아래 "판정 비용 · 처리시간" 카드 (③ 단계만). judge_report.json의 usage를 그대로 보여 준다 (비용 계산은 백엔드 cost.py).
 import { COST_CARD_ID, formatDuration, formatPercent, formatTokens, formatUsd, inputTotal, usageRows } from '../lib/usage.ts'
 import type { JudgeUsage } from '../types/judge_report.ts'
 
@@ -16,7 +16,7 @@ export default function UsageCard({ usage, screens, open, onOpenChange }: Props)
   if (!usage) {
     return (
       <section className="card cost" id={COST_CARD_ID}>
-        <h3>③ 판정 비용 · 처리시간</h3>
+        <h3>판정 비용 · 처리시간</h3>
         <p className="small muted">이 실행에는 비용 기록이 없습니다. 비용 기록 기능을 넣기 전에 판정한 실행입니다.</p>
       </section>
     )
@@ -27,7 +27,7 @@ export default function UsageCard({ usage, screens, open, onOpenChange }: Props)
   return (
     <section className="card cost" id={COST_CARD_ID}>
       <div className="cost-h">
-        <h3>③ 판정 비용 · 처리시간</h3>
+        <h3>판정 비용 · 처리시간</h3>
         <span className="small faint">예상 비용은 공식 가격표로 계산한 값{models.length > 0 && ` · 모델 ${models.join(', ')}`}</span>
       </div>
       <div className="cost-stats">

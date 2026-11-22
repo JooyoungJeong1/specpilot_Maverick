@@ -77,7 +77,7 @@ export default function Summary() {
         </div>
         {usage && (
           <div className="ilv ilv-cost" style={{ gridColumn: '1 / -1' }}>
-            <b style={{ color: 'var(--ink)' }}>③ 판정 비용</b>
+            <b style={{ color: 'var(--ink)' }}>판정 비용</b>
             <span>AI 호출 {usage.total.calls}번</span>
             <span>처리시간 {formatDuration(usage.total.elapsed_sec)}</span>
             <span>예상 비용 {formatUsd(usage.total.cost_usd)}</span>
