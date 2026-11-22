@@ -287,6 +287,15 @@ def _compose(ctx: RunContext, name: str, label: str, units: list[dict], profile:
     return _call_with_retry(ctx, name, rendered, content, lambda o: validate_scenarios(o, ids), prepare=normalize)
 
 
+def _add_gap_request(meta: dict, gmeta: dict) -> None:
+    """빠진 단위를 다시 요청한 호출도 묶음 메타에 넣는다: 토큰 합계, 호출별 기록(calls, gap 표시), 처리시간, 예상 비용."""
+    _add_usage(meta["usage"], gmeta.get("usage", {}))
+    meta["calls"] = meta.get("calls", []) + [{**c, "gap": True} for c in gmeta.get("calls", [])]
+    meta["elapsed_sec"] = round((meta.get("elapsed_sec") or 0) + (gmeta.get("elapsed_sec") or 0), 2)
+    first, again = meta.get("cost_usd"), gmeta.get("cost_usd")
+    meta["cost_usd"] = round(first + again, 6) if first is not None and again is not None else None
+
+
 def run_group(ctx: RunContext, group: dict, profile: dict, by_id: dict[str, dict], screens: dict[str, dict]) -> dict:
     gid = group["id"]
     ids = [u["id"] for u in group["units"]]
@@ -306,7 +315,7 @@ def run_group(ctx: RunContext, group: dict, profile: dict, by_id: dict[str, dict
     gap = None
     if missing:                                  # 빠진 단위만 다시 요청한다
         gobj, gissues, gmeta = _compose(ctx, f"scenario_{gid}_gap", group["label"], missing, profile, GAP_NOTE)
-        _add_usage(meta["usage"], gmeta.get("usage", {}))
+        _add_gap_request(meta, gmeta)
         gap = {"units": [u["id"] for u in missing], "attempts": gmeta.get("attempts"),
                "issues": [i.to_dict() for i in gissues]}
         if gobj is not None:

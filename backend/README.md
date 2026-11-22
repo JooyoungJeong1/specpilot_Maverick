@@ -31,9 +31,9 @@
    `.env`에 `ANTHROPIC_API_KEY=본인 키`를 채운다. 키는 **사람마다 따로 발급**하고, 공유하거나 커밋하지 않는다.
 5. 설치 확인 (API 키 필요 없음)
    ```bash
-   python -m pytest -q         # 76 passed 이면 정상
+   python -m pytest -q         # 77 passed 이면 정상
    ```
-   `69 passed, 7 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
+   `70 passed, 7 skipped`가 나오면 poppler를 못 찾은 것이니 2번을 다시 확인한다.
 
 poppler 없이도 돌아가지만, 입력 점검의 그림 마커 대조와 quote 원문 대조가 경고로만 남아서 결과가 사람마다 달라질 수 있다. 같이 돌려볼 때는 모두 설치하는 것을 권장한다.
 

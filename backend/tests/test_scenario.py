@@ -10,7 +10,7 @@ openpyxl = pytest.importorskip("openpyxl")
 
 from specpilot import cli  # noqa: E402
 from specpilot.config import Settings  # noqa: E402
-from specpilot.llm import ScriptedLLM  # noqa: E402
+from specpilot.llm import LLMResult, ScriptedLLM  # noqa: E402
 from specpilot.prompts import PromptSet  # noqa: E402
 from specpilot.scenario import (SPEC_FILE, TRACE_FILE, build_groups, merge_scenarios, popup_parent,  # noqa: E402
                                 post_checks, run_scenario, validate_scenarios)
@@ -255,6 +255,28 @@ def test_trace_table_joins_judge_results_when_present(run_dir):
     assert rows["REQ-QNA-001-01"][0] == "-"                         # ③ 결과가 없는 단위
     spec = openpyxl.load_workbook(run_dir / SPEC_FILE)
     assert all("불일치" not in str(c.value) for ws in spec for row in ws.iter_rows() for c in row)   # 사양서에는 판정을 넣지 않는다
+
+
+class UsageLLM(ScriptedLLM):
+    """토큰 사용량을 같이 돌려주는 가짜 LLM."""
+
+    def complete(self, system, messages, max_tokens):
+        r = super().complete(system, messages, max_tokens)
+        return LLMResult(r.text, r.stop_reason, {"input_tokens": 1000, "output_tokens": 500})
+
+
+def test_gap_request_is_recorded_in_group_meta(run_dir):
+    # 빠진 단위를 다시 요청한 호출도 묶음 메타의 호출별 기록 · 처리시간 · 예상 비용 합계에 들어간다
+    ctx = ctx_for(run_dir, None)
+    ctx.settings.model = "claude-sonnet-5"
+    ctx.llm = UsageLLM([R_001, R_002_BAD, R_002_MISSING, R_002_GAP, R_005, R_APP])
+    run_scenario(ctx, log=lambda *_: None)
+
+    meta = read_json(run_dir / "scenario" / "QNA-002.meta.json")
+    assert [c.get("gap", False) for c in meta["calls"]] == [False, False, True]   # 처음 요청 2번 + 다시 요청 1번
+    assert meta["usage"]["input_tokens"] == 3000 == sum(c["usage"]["input_tokens"] for c in meta["calls"])
+    assert meta["cost_usd"] == round(sum(c["cost_usd"] for c in meta["calls"]), 6) == 0.021
+    assert meta["elapsed_sec"] == round(sum(c["elapsed_sec"] for c in meta["calls"]), 2)
 
 
 def test_unit_still_missing_after_gap_is_reported(run_dir):
