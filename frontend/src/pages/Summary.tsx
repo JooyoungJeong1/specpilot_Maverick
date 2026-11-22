@@ -9,6 +9,7 @@ import UsageCard from '../components/UsageCard.tsx'
 import { groupByScreen, questionScope } from '../lib/screens.ts'
 import { overview, sortByPriority, sortGroups, statusClass, visibleGroups, type SortMode } from '../lib/summary.ts'
 import { appTablePath } from '../lib/table.ts'
+import { COST_CARD_ID, formatDuration, formatPercent, formatUsd } from '../lib/usage.ts'
 import { countStatuses, ITEM_STATUSES, mergeVerdicts, NOT_JUDGED, UNIT_STATUSES } from '../lib/verdicts.ts'
 
 /** 위쪽 판정별 칸. 판정 전은 있을 때만 */
@@ -19,6 +20,8 @@ export default function Summary() {
   const pdfUrl = usePdfUrl(run?.id)
   const { onlyProblems } = useLayout()
   const [sort, setSort] = useState<SortMode>('doc')
+  /** 아래 비용 카드의 "화면별로 보기"가 펼쳐져 있는지. 위 요약의 "자세히 보기"가 연다 */
+  const [costOpen, setCostOpen] = useState(false)
 
   const groups = useMemo(
     () => (run ? groupByScreen(run.requirements, mergeVerdicts(run.requirements.units, run.judgments)) : []),
@@ -40,6 +43,13 @@ export default function Summary() {
   const extras = run.judgments?.extras ?? []
   const questions = sortByPriority(run.requirements.questions)
   const lgd = o.counts[NOT_JUDGED] ? UNIT_STATUSES : JUDGED
+  const usage = run.report?.usage
+  /** 위 요약의 "자세히 보기": 아래 비용 카드의 화면별 표를 펴고 그리로 내려간다 */
+  const showCost = () => {
+    setCostOpen(true)
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    requestAnimationFrame(() => document.getElementById(COST_CARD_ID)?.scrollIntoView({ block: 'start', behavior: smooth ? 'smooth' : 'auto' }))
+  }
 
   return (
     <div className="sum">
@@ -65,6 +75,16 @@ export default function Summary() {
           {ITEM_STATUSES.map((s) => <span key={s}><i className={`c-${statusClass(s)}`} />{s} {itemCounts[s]}</span>)}
           <Link to="/table?view=item" className="linkbtn" style={{ marginLeft: 'auto' }}>항목별로 보기 →</Link>
         </div>
+        {usage && (
+          <div className="ilv ilv-cost" style={{ gridColumn: '1 / -1' }}>
+            <b style={{ color: 'var(--ink)' }}>③ 판정 비용</b>
+            <span>AI 호출 {usage.total.calls}번</span>
+            <span>처리시간 {formatDuration(usage.total.elapsed_sec)}</span>
+            <span>예상 비용 {formatUsd(usage.total.cost_usd)}</span>
+            <span>캐시 {formatPercent(usage.total.cache_read_ratio)}</span>
+            <button type="button" className="linkbtn" style={{ marginLeft: 'auto' }} onClick={showCost}>자세히 보기 ↓</button>
+          </div>
+        )}
       </section>
 
       <div className="sec-h">
@@ -104,7 +124,9 @@ export default function Summary() {
         </section>
       </div>
 
-      {run.report && <UsageCard usage={run.report.usage} screens={screens.map((g) => ({ id: g.id, name: g.name }))} />}
+      {run.report && (
+        <UsageCard usage={usage} screens={screens.map((g) => ({ id: g.id, name: g.name }))} open={costOpen} onOpenChange={setCostOpen} />
+      )}
     </div>
   )
 }

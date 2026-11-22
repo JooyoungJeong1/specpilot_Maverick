@@ -4,6 +4,9 @@ import type { JudgeUsage, UsageRow } from '../types/judge_report.ts'
 /** 화면별 파일 고르기 호출의 키 (backend judge.py) */
 export const CODE_MAP_KEY = 'code_map'
 
+/** 요약 화면 아래 비용 카드의 DOM id (위 요약의 "자세히 보기"가 그리로 내려간다) */
+export const COST_CARD_ID = 'cost'
+
 /** 827.05 → "13분 47초", 6.73 → "6.7초". 기록이 없으면(0) "-" */
 export function formatDuration(sec: number | null | undefined): string {
   if (!sec || sec <= 0) return '-'
