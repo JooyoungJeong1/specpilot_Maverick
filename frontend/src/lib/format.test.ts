@@ -8,6 +8,11 @@ describe('projectMeta', () => {
     expect(projectMeta({ id: '20261012-2140', source: 'local', requirements: req }))
       .toBe('20261012-2140 · 기획서 화면 8개 · 분석 2026-10-12 21:40')
   })
+  it('③만 다시 돌린 실행은 마지막으로 결과가 바뀐 때를 쓴다', () => {
+    const req = { ...requirements, meta: { merged_at: '2026-11-09T19:48:12', run_dir: 'r3' } }
+    expect(projectMeta({ id: 'r3', source: 'local', requirements: req, updatedAt: '2026-11-18T01:49:30' }))
+      .toBe('r3 · 기획서 화면 8개 · 분석 2026-11-18 01:49')
+  })
 })
 
 describe('runLabel', () => {

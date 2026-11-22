@@ -64,21 +64,44 @@ function readJson(file: string): Record<string, any> | null {
   }
 }
 
+/** 파일을 마지막으로 고친 때. 결과 파일의 merged_at과 같은 모양(로컬 시각 "2026-11-18T01:48:03")으로 */
+function mtimeIso(file: string): string | null {
+  try {
+    const d = fs.statSync(file).mtime
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 19)
+  } catch {
+    return null
+  }
+}
+
+const isoOrNull = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
+
 /** 최근 분석 목록에 쓸 요약. 결과 파일이 깨져 있어도 목록은 보여 준다. */
 function runSummary(run: RunEntry) {
   const req = readJson(path.join(run.dir, 'requirements.json'))
   const report = readJson(path.join(run.dir, 'judge_report.json'))
+  const scenarios = readJson(path.join(run.dir, 'scenarios.json'))
   const job = readJson(path.join(run.dir, 'job.json'))           // 웹에서 올려 돌린 실행 (시연 서버가 씀)
+  const mergedAt = isoOrNull(req?.meta?.merged_at)
+  // ③은 judge_report.json에 시각이 없어 파일을 쓴 때를 쓴다. ②까지 복사해 ③만 다시 돌린 실행도 ③을 돌린 날로 보인다
+  const judgedAt = report ? mtimeIso(path.join(run.dir, 'judge_report.json')) : null
+  const times = [mergedAt, judgedAt, isoOrNull(scenarios?.meta?.merged_at)].filter((t): t is string => !!t)
   return {
     id: run.id,
     source: run.source,
     name: typeof job?.name === 'string' && job.name ? job.name : null,
     screens: Array.isArray(req?.app_profile?.screens) ? req.app_profile.screens.length : 0,
     units: Array.isArray(req?.units) ? req.units.length : 0,
-    mergedAt: typeof req?.meta?.merged_at === 'string' ? req.meta.merged_at : null,
+    mergedAt,
+    updatedAt: times.length ? times.reduce((a, b) => (a > b ? a : b)) : null,
     byStatus: report?.summary?.by_status ?? null,
     notJudged: typeof report?.summary?.units_not_judged === 'number' ? report.summary.units_not_judged : null,
   }
+}
+
+/** 목록은 마지막으로 결과가 바뀐 실행부터. 시각이 같거나 없으면 원래 순서 그대로 */
+function byUpdated(a: { updatedAt: string | null }, b: { updatedAt: string | null }): number {
+  return (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')
 }
 
 /** base 안의 경로만 허용한다 (../ 막기) */
@@ -134,7 +157,7 @@ const handler: Connect.NextHandleFunction = (req, res, next) => {
   if (parts[0] !== 'runs') return send(res, 404, { error: 'not found' })
 
   const runs = listRuns()
-  if (parts.length === 1) return send(res, 200, runs.map(runSummary))
+  if (parts.length === 1) return send(res, 200, runs.map(runSummary).sort(byUpdated))
 
   const run = runs.find((x) => x.id === parts[1])
   if (!run) return send(res, 404, { error: `실행 결과가 없습니다: ${parts[1]}` })

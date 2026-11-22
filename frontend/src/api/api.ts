@@ -25,6 +25,8 @@ export interface RunSummary {
   units: number
   /** requirements.json을 만든 시각 */
   mergedAt: string | null
+  /** 마지막으로 결과가 바뀐 시각: ①② · ③ · ④ 중 가장 늦은 것. ③만 다시 돌린 실행은 ③을 돌린 때 */
+  updatedAt: string | null
   /** judge_report.json의 판정 수. ③을 안 돌렸으면 null */
   byStatus: Partial<Record<JudgeStatus, number>> | null
   /** 판정 전 단위 수. ③을 안 돌렸으면 null */
@@ -41,6 +43,8 @@ export interface RunData {
   report: JudgeReport | null
   /** ④ 결과 (scenarios.json). ④를 아직 안 돌렸으면 null */
   scenarios: Scenarios | null
+  /** RunSummary.updatedAt (예시 데이터는 없을 수 있다) */
+  updatedAt?: string | null
 }
 
 export interface CodeContext {
@@ -86,7 +90,8 @@ export async function getRun(runId: string): Promise<RunData> {
     getOptionalJson<JudgeReport>(file('judge_report.json')),
     getOptionalJson<Scenarios>(file('scenarios.json')),
   ])
-  return { id: runId, source: summary.source, name: summary.name ?? null, requirements, judgments, report, scenarios }
+  return { id: runId, source: summary.source, name: summary.name ?? null, requirements, judgments, report, scenarios,
+    updatedAt: summary.updatedAt ?? null }
 }
 
 /** 실행 폴더의 파일 주소 (백엔드가 만든 테스트사양서.xlsx, 추적표.xlsx 등). 파일이 없으면 null */

@@ -22,8 +22,8 @@ export function runCounts(run: Pick<RunSummary, 'units' | 'byStatus' | 'notJudge
   return counts
 }
 
-/** 상단 바 프로젝트 정보. 초안: "이름 · 기획서 화면 n개 · 분석 날짜" */
-export function projectMeta(run: Pick<RunData, 'id' | 'source' | 'requirements'> & { name?: string | null }): string {
+/** 상단 바 프로젝트 정보. 초안: "이름 · 기획서 화면 n개 · 분석 날짜". 날짜는 마지막으로 결과가 바뀐 때 */
+export function projectMeta(run: Pick<RunData, 'id' | 'source' | 'requirements' | 'updatedAt'> & { name?: string | null }): string {
   const req = run.requirements
-  return `${runLabel(run)} · 기획서 화면 ${req.app_profile.screens.length}개 · 분석 ${formatDateTime(req.meta.merged_at)}`
+  return `${runLabel(run)} · 기획서 화면 ${req.app_profile.screens.length}개 · 분석 ${formatDateTime(run.updatedAt ?? req.meta.merged_at)}`
 }

@@ -44,7 +44,7 @@ export default function Start() {
               <b>{runLabel(r)}</b>
               <span className="small muted">기획서 화면 {r.screens}개 · 요구사항 {r.units}개</span>
             </span>
-            <span className="small muted hide-sm2">{formatDateTime(r.mergedAt)}</span>
+            <span className="small muted hide-sm2" title="마지막으로 결과가 바뀐 시각 (①② · ③ · ④ 중 가장 늦은 것)">{formatDateTime(r.updatedAt ?? r.mergedAt)}</span>
             <span className="hide-sm2"><StackBar counts={runCounts(r)} statuses={UNIT_STATUSES} /></span>
           </Link>
         ))}
